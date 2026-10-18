@@ -4,18 +4,18 @@
 
 # 云析桌面版 · YunX-Desktop
 
-**粘贴分享链接，直接高速下载 —— 云析 YunX 的 Windows 桌面移植**
+**粘贴分享链接，直接高速下载 —— 云析 YunX 的 macOS 桌面版**
 
 识别夸克 / UC / 迅雷 / 百度 / 139 / 123 分享链接，自动匹配提取码，Range 分片并发 + 断点续传。
 
-[![Release](https://img.shields.io/github/v/release/tidain/YunX-Desktop?style=flat-square\&label=release\&color=4C8BF5)](https://github.com/tidain/YunX-Desktop/releases/latest)
-[![Stars](https://img.shields.io/github/stars/tidain/YunX-Desktop?style=flat-square\&logo=github\&color=4C8BF5)](https://github.com/tidain/YunX-Desktop/stargazers)
+[![Release](https://img.shields.io/github/v/release/liuyinkang0115-debug/YunX-macOS?style=flat-square\&label=release\&color=4C8BF5)](https://github.com/liuyinkang0115-debug/YunX-macOS/releases/latest)
+[![Stars](https://img.shields.io/github/stars/liuyinkang0115-debug/YunX-macOS?style=flat-square\&logo=github\&color=4C8BF5)](https://github.com/liuyinkang0115-debug/YunX-macOS/stargazers)
 [![License](https://img.shields.io/badge/license-AGPL--3.0-blue?style=flat-square)](./LICENSE)
-[![Platform](https://img.shields.io/badge/platform-Windows-0078D6?style=flat-square\&logo=windows\&logoColor=white)](#构建)
+[![Platform](https://img.shields.io/badge/platform-macOS-000000?style=flat-square\&logo=apple\&logoColor=white)](#构建)
 [![Kotlin](https://img.shields.io/badge/Kotlin-7F52FF?style=flat-square\&logo=kotlin\&logoColor=white)](https://kotlinlang.org/)
 [![Compose](https://img.shields.io/badge/Compose%20Multiplatform-Desktop-4285F4?style=flat-square\&logo=jetpackcompose\&logoColor=white)](https://www.jetbrains.com/lp/compose-multiplatform/)
 
-[下载最新版](https://github.com/tidain/YunX-Desktop/releases/latest) · [功能](docs/FEATURES.md) · [使用](docs/USAGE.md) · [构建](docs/BUILD.md) · [常见问题](#常见问题) · [与上游差异](docs/UPSTREAM-DIFF.md)
+[下载最新版](https://github.com/liuyinkang0115-debug/YunX-macOS/releases/latest) · [功能](docs/FEATURES.md) · [使用](docs/USAGE.md) · [构建](docs/BUILD.md) · [常见问题](#常见问题) · [与上游差异](docs/UPSTREAM-DIFF.md)
 
 </div>
 
@@ -29,8 +29,8 @@
 
 ## 简介
 
-云析 YunX 的 **Windows 桌面移植版**：粘贴网盘分享链接，浏览分享内容并直接高速下载文件，全程在电脑上完成。
-提供**免安装便携版**（整个文件夹拷走即用）与**安装版**（开始菜单 / 桌面快捷方式，可卸载）两种分发形式。
+云析 YunX 的 **macOS 桌面版**：粘贴网盘分享链接，浏览分享内容并直接高速下载文件，全程在 Mac 上完成。
+提供 **DMG 安装包** 与 **ZIP 压缩包** 两种分发形式，支持 Apple Silicon 与 Intel Mac。
 
 ## 截图
 
@@ -68,11 +68,11 @@
 
 - **GitHub 浏览与 README 渲染** —— 浏览仓库文件树 / Releases / 账号仓库列表，README 与更新说明以 GFM Markdown 渲染（支持镜像加速）
 
-- **通知中心进度** —— 下载进度实时显示为 Windows 通知中心 toast 进度条（多任务聚合 + 实时速度）
+- **下载进度** —— 应用内实时显示多任务进度、速度与完成状态
 
 - **多种登录方式** —— 内嵌 Chromium 登录 / 一键导入本机浏览器 Cookie / 手动粘贴 Cookie；GitHub 可选 Personal Access Token
 
-- **Windows 系统集成** —— 原生托盘菜单（亮暗跟随系统配色）、原生文件对话框、剪贴板分享链接检测
+- **macOS 系统集成** —— 菜单栏托盘、原生文件对话框、Finder 文件定位、剪贴板分享链接检测
 
 - **桌面体验** —— 深色模式 + 自定义种子色、链接收藏、解析历史、窗口内弹窗覆盖层
 
@@ -94,8 +94,8 @@
 | 持久化         | `sqlite-jdbc`（SQLite）+ `java.util.prefs`           |
 | 网络          | OkHttp 4.12.0（请求 + 分片下载）                           |
 | 内嵌浏览器       | JCEF 132（Chromium）                                 |
-| 原生桥接        | JNA（Win32 API）+ 自编 `darkmode.dll`                  |
-| 构建分发        | Gradle + jlink + jpackage + Inno Setup             |
+| 原生桥接        | JNA + macOS 原生系统命令                             |
+| 构建分发        | Gradle + jlink + jpackage（DMG / PKG）             |
 | Markdown 渲染 | multiplatform-markdown-renderer（GFM：README / 更新说明） |
 
 ## 使用
@@ -103,23 +103,23 @@
 1. 在「网盘」页登录需要使用的网盘账号（推荐内嵌浏览器登录）
 2. 在「解析」页粘贴分享链接（可带提取码，支持从剪贴板一键粘贴）
 3. 浏览分享内容，点击文件加入下载
-4. 在「下载」页查看进度，支持暂停 / 继续 / 删除 / 打开；进度同步显示在 Windows 通知中心
+4. 在「下载」页查看进度，支持暂停 / 继续 / 删除 / 打开
 
 设置项、数据目录、托盘操作见 **[使用说明](docs/USAGE.md)**。
 
 ## 构建
 
-要求：Windows 10/11 x64，另需一个 **C++ 编译器**（托盘菜单配色桥接层用；缺它时 `run` / `package` /
-`installer` 会在这一步失败）。JDK、Gradle、Inno Setup 均无需手动安装。
+要求：macOS 12 或更高版本，JDK 17。Apple Silicon 与 Intel 架构需使用对应的构建环境。
+Gradle 可由系统安装，首次构建会自动下载项目依赖。
 
-```powershell
-git clone https://github.com/tidain/YunX-Desktop.git
-cd YunX-Desktop
+```bash
+git clone https://github.com/liuyinkang0115-debug/YunX-macOS.git
+cd YunX-macOS
 
-.\run.ps1 run        # 编译并启动（开发，含 darkmode.dll）
-.\run.ps1 build      # 仅编译 Kotlin（不需要 C++ 编译器）
-.\run.ps1 package    # 免安装便携版 → release\YunX-Desktop\
-.\run.ps1 installer  # 单文件安装程序 → release\YunX-Desktop-setup-*.exe
+gradle :desktop:run        # 编译并启动开发版
+gradle :desktop:test       # 运行测试
+gradle :desktop:packageDmg # 生成 DMG 安装包
+gradle :desktop:packagePkg # 生成 PKG 安装包
 ```
 
 环境要求、版本号管理与打包产物见 **[构建与打包](docs/BUILD.md)**。
@@ -134,25 +134,23 @@ cd YunX-Desktop
 </details>
 
 <details>
-<summary><b>便携版和安装版有什么区别？</b></summary>
+<summary><b>DMG 和 ZIP 有什么区别？</b></summary>
 
-便携版是免安装的文件夹，拷到任意位置双击 `YunX-Desktop.exe` 即可运行；
-安装版走安装向导，安装到 `%LOCALAPPDATA%\Programs\YunX-Desktop`，并创建开始菜单 / 桌面快捷方式，可在设置中卸载。
-两者功能完全一致。
+DMG 双击后将应用拖入「应用程序」目录；ZIP 解压后可直接运行 `YunX-Desktop.app`。
+两者功能一致，ZIP 适合便携使用。
 
 </details>
 
 <details>
-<summary><b>下载时看不到 Windows 通知中心的通知？</b></summary>
+<summary><b>首次打开提示无法验证开发者？</b></summary>
 
-先确认「设置 → 系统 → 通知」已开启（专注助手 / 免打扰也会拦通知）。应用在检测到通知未送达时，
-会尝试自动创建所需的开始菜单快捷方式兜底，但最终能否弹出仍取决于系统通知设置。
+请在 Finder 中右键应用并选择「打开」，或到「系统设置 → 隐私与安全性」中允许打开未签名应用。
 
 </details>
 
 ## 支持开发
 
-- **GitHub Star**：给 [tidain/YunX-Desktop](https://github.com/tidain/YunX-Desktop) 点个 Star ⭐
+- **GitHub Star**：给 [liuyinkang0115-debug/YunX-macOS](https://github.com/liuyinkang0115-debug/YunX-macOS) 点个 Star
 
 - **提交 Issues**：发现 Bug 或有功能建议欢迎反馈
 
@@ -180,14 +178,14 @@ cd YunX-Desktop
 
 - PC 移植版仓库：<https://github.com/tidain/YunX-Desktop>
 
-- 问题与建议：<https://github.com/tidain/YunX-Desktop/issues>
+- 问题与建议：<https://github.com/liuyinkang0115-debug/YunX-macOS/issues>
 
 ## Star History
 
-<a href="https://www.star-history.com/?repos=tidain%2Fyunx-desktop&type=date&legend=top-left">
+<a href="https://www.star-history.com/?repos=liuyinkang0115-debug%2FYunX-macOS&type=date&legend=top-left">
  <picture>
-   <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/chart?repos=tidain/yunx-desktop&type=date&theme=dark&legend=top-left" />
-   <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/chart?repos=tidain/yunx-desktop&type=date&legend=top-left" />
-   <img alt="Star History Chart" src="https://api.star-history.com/chart?repos=tidain/yunx-desktop&type=date&legend=top-left" />
+   <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/chart?repos=liuyinkang0115-debug/YunX-macOS&type=date&theme=dark&legend=top-left" />
+   <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/chart?repos=liuyinkang0115-debug/YunX-macOS&type=date&legend=top-left" />
+   <img alt="Star History Chart" src="https://api.star-history.com/chart?repos=liuyinkang0115-debug/YunX-macOS&type=date&legend=top-left" />
  </picture>
 </a>

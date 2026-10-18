@@ -1,7 +1,7 @@
-# 与上游的差异（Windows 桌面版 vs Android 版）
+# 与上游的差异（macOS 桌面版 vs Android 版）
 
 - 上游（Android）：[CYQawa/YunX](https://github.com/CYQawa/YunX)
-- 本仓库（Windows 桌面移植）：[tidain/YunX-Desktop](https://github.com/tidain/YunX-Desktop)
+- 本仓库（macOS 桌面移植）：[liuyinkang0115-debug/YunX-macOS](https://github.com/liuyinkang0115-debug/YunX-macOS)
 
 **沿用上游的部分**：网盘分享链接的解析协议、下载引擎（Range 分片并发、弹性区按字节顺序分配、
 断点续传、失败重试、全局限速）、界面框架与主题体系（Compose + Material 3、深色模式 + 种子色）、
@@ -14,7 +14,7 @@
 | 能力 | 上游（Android） | 桌面版 |
 | --- | --- | --- |
 | 夸克 / UC / 百度 / 139 登录 | 内嵌 WebView 提取 Cookie | **内嵌 Chromium（JCEF 132）** 打开真实网页登录，登录完成后自动检测并保存 Cookie |
-| 已有浏览器会话 | 无 | **一键导入本机浏览器 Cookie**：扫描 Chrome / Edge / Firefox / 360 / QQ 等，用 Windows DPAPI 解密（Chrome / Edge 较新版本受「应用绑定加密」限制可能读不到，Firefox / 360 等始终可用） |
+| 已有浏览器会话 | 无 | **一键导入本机浏览器 Cookie**：扫描 Chrome / Edge / Firefox，用 macOS Keychain Safe Storage 派生密钥并解密 Chromium Cookie，Firefox 直接读取 Cookie |
 | 兜底方式 | 手动粘贴 Cookie| 与上游相同       |
 | 123 云盘 | 账号密码换 JWT | 同上游（纯 HTTP 表单登录） |
 | GitHub Token | Android Keystore 加密存储 | AES-GCM 加密存储，密钥为本地密钥文件 `credential.key`（非 Android Keystore）；仅用于提升 API 限额 |
@@ -22,15 +22,9 @@
 
 ## 2. 下载进度与保活
 
-- **进度通知改为 Windows 通知中心**：下载进度显示为 toast 进度条（多任务自动聚合成一条、
-  带实时速度与完成度）。
-  - 同一条通知**原地刷新**，不会每次刷新都弹横幅或响铃；
-  - **送达自检**：发送后对比 Windows 为应用维护的 `LastNotificationAddedTime`，若系统静默丢弃了通知，
-    则自动创建带 AppUserModelID 的开始菜单快捷方式兜底（这是未打包桌面应用能发通知的前提条件），
-    正常情况下不会改动用户的开始菜单。快捷方式位于开始菜单文件夹
-    `%APPDATA%\Microsoft\Windows\Start Menu\Programs\`，且无法保证 100% 送达（取决于系统通知设置）。
+- **进度显示改为应用内下载页**：下载页显示实时进度、速度与完成度，任务完成时可发送 macOS 通知。
 - **保活语义变化**：「锁屏后保持下载」→ **「下载时阻止电脑休眠」**，通过
-  `SetThreadExecutionState` 实现，任务结束自动恢复（偏好键 `keep_awake_downloading`，旧键
+  macOS 原生电源管理接口实现，任务结束自动恢复（偏好键 `keep_awake_downloading`，旧键
   `keep_download_when_locked` 自动迁移）。
 - **完成提示**：全部任务结束且确实下载完成时，额外弹一条完成通知。
 
@@ -38,22 +32,18 @@
 
 桌面版新增了完整的托盘与窗口生命周期（上游为 Android 通知栏 / 前台服务概念）：
 
-- **系统托盘**：AWT `TrayIcon` + 手写 Win32 原生右键菜单（JNA 调 `CreatePopupMenu` +
-  `AppendMenuW` + `TrackPopupMenuEx`），中文显示正常、不再出现方块。
-- **菜单跟随系统配色**：自带原生桥接层 `native/darkmode.cpp` → `darkmode.dll`，启动时通过
-  `uxtheme.dll` 的 `SetPreferredAppMode` 打开暗色支持，每次弹菜单前按当前系统配色重新应用，
-  因此系统在深色 / 浅色之间切换时菜单会跟着变。
+- **菜单栏托盘**：使用 AWT 原生菜单栏图标与菜单，提供显示窗口和退出操作。
+- **菜单跟随系统配色**：菜单随 macOS 深色 / 浅色外观切换。
 - **窗口行为**：左键托盘图标恢复主窗口（含从任务栏最小化状态恢复）、最小化到托盘、
   关闭主窗口时按设置询问 / 直接退出 / 最小化到托盘。
 - **启动与关闭过渡**：启动闪屏 + 主窗口内容就绪后渐入，关闭时先淡出再销毁，
   避免原生窗口销毁瞬间的白屏闪烁。
 
-## 4. Windows 系统整合
+## 4. macOS 系统整合
 
-- **原生对话框**：下载目录选择、认证备份的导入 / 导出均为资源管理器同款样式
-  （Vista+ 的 COM `IFileDialog`，JNA 直接调 vtable，不依赖 Swing）。
-- **下载目录解析**：通过 Known Folder API 解析系统「下载」位置，支持用户重定向过的路径。
-- **文件定位**：下载项「文件夹」按钮等价于 `explorer /select,<file>`，直接选中目标文件。
+- **原生对话框**：下载目录选择、认证备份的导入 / 导出使用 macOS 原生文件选择器。
+- **下载目录解析**：默认使用 `~/Downloads`，也支持用户自定义路径。
+- **文件定位**：下载项「文件夹」按钮调用 Finder 显示并选中目标文件。
 - **剪贴板分享链接检测**：主窗口不在前台时轮询剪贴板，发现网盘分享链接在右下角弹出提示卡片，
   点击即可打开解析（可在设置中关闭）。
 
@@ -65,8 +55,7 @@
 - **链接收藏**：收藏解析链接并分类管理。
 - **右键菜单**：统一为窗口内弹窗材质，并新增「复制分享链接」。
 - **渲染后端可选**：默认 `OPENGL`（GPU 渲染，动画流畅且文字清晰），
-  可用环境变量 `YUNXPC_RENDER_API=SOFTWARE|DIRECT3D|OPENGL` 切换；
-  字体 hinting 会按后端自动调整，保证文字清晰度。
+  可用环境变量 `YUNXPC_RENDER_API=SOFTWARE|OPENGL` 切换；字体 hinting 会按后端自动调整。
 - **百度网盘 API 修复**：域名迁移、`bdstoken` 自动刷新、限流重试、超时收紧等一串修复。
 
 ## 6. 数据与存储
@@ -74,25 +63,20 @@
 | 项 | 上游（Android） | 桌面版 |
 | --- | --- | --- |
 | 数据库 | Room | 纯 JDBC（`sqlite-jdbc`）直连 SQLite |
-| 设置存储 | SharedPreferences | `java.util.prefs`，落在注册表 `HKEY_CURRENT_USER\Software\JavaSoft\Prefs\yunx` |
+| 设置存储 | SharedPreferences | `java.util.prefs`，由 macOS 的 Java Preferences 存储 |
 | 文件存储 | SAF / tree Uri | 普通文件路径（下载目录等） |
-| 数据目录 | 应用私有目录 | `%USERPROFILE%\.yunx-desktop\`：`yunx.db`、`credential.key`、`cache/download_tmp`、`files/yunx-desktop.log`（旧版 `.yunx-pc` 首次启动自动迁移） |
+| 数据目录 | 应用私有目录 | `~/Library/Application Support/YunX-Desktop/`：`yunx.db`、`credential.key`、`cache/download_tmp`、`files/yunx-desktop.log` |
 | 认证备份 | 有 | 同思路：PBKDF2 派生密钥 + AES-GCM 加密 Cookie / JWT，导出 `.yunx` 备份文件，可跨设备恢复 |
 | README / 更新说明图片渲染 | Android `BitmapFactory` 解码（`inSampleSize` 降采样） | GFM Markdown 渲染，图片改用 Skia（skiko）解码，无降采样 |
 
 ## 7. 构建与分发
 
 - **技术栈**：Kotlin + Compose Multiplatform（Desktop）+ Gradle，JDK 17。
-- **打包链路**：`jlink` 裁出运行时镜像 → `jpackage` 生成 app-image → 自研启动器替换默认启动器；
-  安装包由 Inno Setup 压缩成单文件（每用户安装、无需管理员权限）。
-- **自研启动器**（`launcher/Launcher.cs`，C# 编译为无控制台窗口的 exe）：
-  固定读取 `app\YunX-Desktop.cfg`，因此**改 exe 名字或放在中文路径下都不会失效**；
-  同时负责启动闪屏与主窗口的交叉淡入。
+- **打包链路**：`jlink` 裁出运行时镜像 → `jpackage` 生成 `.app` → Gradle 生成 DMG / PKG。
 - **版本号单一来源**：根目录 `version.txt` —— jpackage 版本、便携包 / 安装程序里的程序版本与
   文件名、应用内「关于页 / 更新检测」全部由它派生，**发版只需改这一个文件**。
-- **原生桥接层**：`native/darkmode.cpp` 在构建期编译为 `darkmode.dll`（优先 `cl.exe`，回退 `g++`），
-  随便携版 / 安装包一起分发。
-- **零手动环境配置**：缺 JDK 自动下载、Gradle 由 wrapper 拉取、缺 Inno Setup 自动静默安装。
+- **原生桥接层**：macOS 使用 JNA、AWT 与系统命令完成菜单栏、Finder、文件选择器和休眠控制。
+- **分发形式**：GitHub Release 同时提供 DMG 与 ZIP，构建环境需使用目标 Mac 架构。
 
 ## 8. 已移除的上游功能
 
@@ -116,17 +100,17 @@
 | `835b1cb`（#123） | 更新下载应用自定义镜像前缀 + 失败回退直连 | `SettingsScreen` 的「镜像站下载更新包」改用 `SettingsRepository.githubMirrorPrefix`（未配置用内置默认），并把 GitHub 直连 URL 作为 `fallbackUrl` 传入 `DownloadManager.enqueue`；镜像主 URL 探测失败时整任务切直连（与 GitHub 浏览下载同机制）。 |
 | `c4ef992`（#126） | 未登录也可查看解析文件列表 | `ResolveViewModel.isGuest` + 6 平台列表接口匿名：百度 `errno=-6` 文案区分、夸克/UC 非 JSON 响应带 HTTP 码、迅雷 token 为空时不写 `Authorization` 并走 `panCallAnonymous`、139 去掉账号前置校验；`startResolve`/`openFolder`/`goBack`/`navigateToLevel` 空凭据照常下传；下载/转存（`fetchDownloadLink`/`downloadFiles`/`startDownload`/`saveToCloud`/`requestSave`）仍要求登录，提示统一为「…需要先登录 X（未登录仅能浏览文件列表）」；`ShareDetailScreen` 顶部新增 `GuestBrowseNotice` 常驻提示条。 |
 | `a84118a`（#127） | 修正创建分享有效期错位、统一中性码 | 新增 `model/ShareExpire`（1/2/3/4 中性码 + `daysOrNull`/`baiduPeriod`/`xunleiDays`，未知码 fail-loud）；百度 `BaiduShareResult.expiredType` 可空、ViewModel 用 `baiduPeriod` 转换并优先用服务端回填；139/123/迅雷 API 的中性码回填不再 fail-open 成「永久/30 天」。**桌面差异**：139 与 123 云盘页自带分享弹窗，有效期本就是「天数」语义（`null=永久 / 1 / 7 / 30`）且直接传给对应 API，故这两个 ViewModel 仍收天数、未改签名；只有百度走 `CloudFileSheets` 的中性码，需按上游修正。 |
-| `286446c`（#118） | 合并大文件时显示合并进度 | `DownloadStats.mergePercent`（-1=不在合并）；`ChunkDownloader.mergeChunksToStream` 新增 `onProgress`，`finishDownload` 300ms 节流上报；下载页主任务卡/子任务行/文件夹徽标显示「合并中 · n%」。桌面落盘已改为「边合并边写目标文件」，故进度按「已合并字节 / total」计算。**未同步通知栏**：桌面进度走 Windows 通知中心，合并阶段仍在 100% 后短暂显示（未额外改造 toast 文案）。 |
+| `286446c`（#118） | 合并大文件时显示合并进度 | `DownloadStats.mergePercent`（-1=不在合并）；`ChunkDownloader.mergeChunksToStream` 新增 `onProgress`，`finishDownload` 300ms 节流上报；下载页主任务卡/子任务行/文件夹徽标显示「合并中 · n%」。桌面落盘已改为「边合并边写目标文件」，进度按「已合并字节 / total」计算；macOS 通知仅用于完成提示。 |
 | `d9d17a5`（#129） | 夸克/UC 免登录下载、设置项开关 | 夸克/UC 游客取链 `getGuestShareDownloadLink`（不转存，`__pugs` 随响应捕获进 `DownloadLink.guestCookie`）；`enqueueDownload` 识别游客直链并用游客头（UC：`GUEST_UA`+`Sec-Ch-Ua`；夸克：`API_USER_AGENT`）；`ResolveViewModel.supportsGuestDownload()` 仅夸克/UC 放行，其余平台下载仍要登录；`GuestBrowseNotice` 按平台给不同文案。设置项：新增「接受预发布版更新」开关（`SettingsRepository.acceptPrereleaseUpdate` + `UpdateChecker` 预发布通道与版本后缀比较 + 更新弹窗「预发布」标记）；「自动识别剪贴板」桌面版早有等价开关（设置页「剪贴板分享链接检测」）。 |
 
 ### 9.2 跳过（Android 专属或不适用）
 
 | 上游提交/内容 | 原因 |
 | --- | --- |
-| `d99daaf`(#113)、`43537b2`(#125) | CI：Android 签名 APK 构建与发布，桌面分发走 jpackage/Inno Setup，无关。 |
+| `d99daaf`(#113)、`43537b2`(#125) | CI：Android 签名 APK 构建与发布，macOS 桌面分发走 jpackage（DMG / PKG / ZIP），无关。 |
 | `560d3b6`(#117)、`52f939e`(#119)、`75deabd`(#120)、`06125a8`(#124)、`d85ac95`(#128) | Android 专属：图标/自适应图标、引导页、权限检查等，桌面无对应形态。 |
-| `dbccb09`(#122) 目录选择器崩溃修复 | 桌面下载目录选择走原生 `WindowsFolderPicker`（非 Android SAF `ActivityResultLauncher`），不存在 `ActivityNotFoundException` 崩溃路径；且仪器测试依赖 AndroidX Compose test，桌面无该依赖。 |
-| `d9d17a5`(#129)「网盘更新自动化」 | 桌面更新弹窗只有「安装版(.exe)/便携版(.zip)」资产下载，**没有** Android 版 Release 说明里的「网盘更新」入口，`startUpdateDownload` 在桌面无调用方，故不涉及。 |
+| `dbccb09`(#122) 目录选择器崩溃修复 | 桌面下载目录选择走 macOS 原生文件选择器（非 Android SAF `ActivityResultLauncher`），不存在 `ActivityNotFoundException` 崩溃路径；且仪器测试依赖 AndroidX Compose test，桌面无该依赖。 |
+| `d9d17a5`(#129)「网盘更新自动化」 | macOS 桌面更新弹窗提供 DMG / ZIP 资产下载，**没有** Android 版 Release 说明里的「网盘更新」入口，`startUpdateDownload` 在桌面无调用方，故不涉及。 |
 | `d9d17a5`(#129)「自动识别剪贴板」开关 | 桌面版早已有等价开关与开关项（「剪贴板分享链接检测」，键 `clipboard_link_detection`）。 |
 | `d9d17a5`(#129) 更新说明改纯文本 | 桌面更新弹窗用自研 Markdown 渲染（与 README 共用），保留既有行为。 |
 | `ba3bfb0`(#116) `onTrimMemory` 释放空闲连接 / CrashHandler 内存快照 | Android 生命周期回调与崩溃上报形态，桌面无等价入口（内存高压日志已并入下载进度回调）。 |
@@ -143,7 +127,7 @@
 | `f381914`(#131/#132) | 115 网盘支持（登录 / 云盘管理 / 分享 / 转存 / 下载） | **数据层**：新增 `Pan115Api` / `Pan115Constants` / `Pan115Crypto`（后者把上游 `android.util.Base64` 换成 `java.util.Base64`）；**模型**：`ShareInfo` 增 `warning`（非致命提示），`ShareExpire` 增 115 专属档位（101..105 + `PAN115_OPTIONS`/`pan115Duration`/`pan115CodeOf`/`pan115CodeOfText`）；**仓库**：`Pan115AccountRepository`（Cookie 落库，登出走 `CookieCleaner` 清 `115.com`）与 `Pan115ResolveRepository`（`share/snap` 列目录 → 分享直链；大文件退回「转存临时目录 + 电脑端加密取链」，接入桌面 `TransferSpaceGuard` 空间前置校验）；**DB**：`Pan115AccountEntity`/DAO/`SecureAccountDaos`/`AppDatabase`（新建 `pan115_account` 表，Cookie 加密落库）；**登录**：桌面走既有 JCEF 内嵌浏览器（`Pan115LoginScreen`）打开 115.com，检测 `UID`+`SEID` 后按 `Pan115Constants.filterLoginCookies` 只保留会话字段再用 `/user/info` 校验；**下载**：`DownloadPlatform.PAN115` + `enqueueDownload` 用「登录 Cookie + 取链响应 900s CDN Cookie」拼接、`User-Agent` 用客户端串 `CLIENT_UA`、`Referer` 用 115 域（三处缺失任一 CDN 均 403）；**云盘页**：`Pan115CloudViewModel` + `Pan115CloudScreen`/`Pan115SaveSheet`/`Pan115AccountSheet`（结构对齐 123 云盘页，非照搬 Android UI）；**配套**：网盘页 115 卡片 + 配额（`DriveQuotaViewModel` 并发拉 `getQuota`）、收藏/解析平台标签、认证备份导入导出、`BrowserCookieImporter` 域名后缀、关于/引导页平台列表。**未做端到端真机验证**（无 115 账号，登录/转存/直链需用户自测）。 |
 | `2761069`(#135) | 网盘创建文件夹 | 桌面按上游覆盖面做全 7 个平台：`Pan115CloudViewModel`/`QuarkCloudViewModel`/`UCCoudViewModel`/`XunleiCloudViewModel`/`BaiduCloudViewModel`/`C139CloudViewModel`/`Pan123CloudViewModel` 各加 `createFolder`；`Pan123Api` 补 `createDir`（复用 `upload_request`，`type=1`）、`C139Api` 补 `createDir`（`hcy/file/create`，`type=folder`）+ 对应 Constants；7 个云盘页标题行加「新建文件夹」入口，共用 `CloudCreateFolderDialog`（**窗口内覆盖层 `FadeAlertDialog`，按项目约定不使用 Popup/material3 AlertDialog**），含名称本地校验。各平台父目录/根目录约定不同（百度绝对路径、迅雷根为空串、其余 `"0"`/`"/"`）。 |
 | `5d614f6`(#136) | 夸克免转存下载（分享凭证直取直链）+ 设置项开关 | `QuarkApi.getShareDownloadLinkWithoutSave`（`fids`/`fids_token`/`pwd_id`/`stoken` 交给 `file/download`，Cookie 用账号态）+ `ShareResolveRepository.getShareDownloadLinkWithoutSave`（默认回退 `getShareDownloadLink`，仅夸克覆写）+ `QuarkResolveRepository` 覆写；`ResolveViewModel.resolveShareLink` 收敛「单文件 / 批量」两处登录态取链，开关关掉走老转存流程、夸克个别分享类型失败自动回退转存；设置页「下载」组新增「免转存下载」开关（`SettingsRepository.quarkNoSaveDownload`，默认开），经 `noSaveDownloadProvider` 注入即时生效。**放置判断**：该开关是功能性取链方式选择（默认即正常行为），不是「实验性功能」页那些高风险调参（HTTP/2、读缓冲、慢连接抢占），故放在主设置页「下载」分组，与上游一致。 |
-| `b6a251b`(#130) | QQ 群链接 | 上游在引导页/设置页/关于页引入 `AppLinks`。桌面在**关于页**新增「QQ 交流群」卡片（群号 `635207650`）：Windows 无 `mqqapi://` scheme 的可靠保证，故点击**复制群号**并提示，供用户在 QQ 中搜索加群。 |
+| `b6a251b`(#130) | QQ 群链接 | 上游在引导页/设置页/关于页引入 `AppLinks`。桌面在**关于页**新增「QQ 交流群」卡片（群号 `635207650`）：macOS 无 `mqqapi://` scheme 的可靠保证，故点击**复制群号**并提示，供用户在 QQ 中搜索加群。 |
 | `ShareLinkParser`（随 `f381914`） | 115 链接形态 | `SharePlatform` 增 `PAN115`；新增 `115(?:cdn|rc)?\.com/s/(sw…)`、口令形态 `115…com/(sw…)-(码)`、`?password=` 三个正则与解析分支；兼容既有 6 平台形态不被误伤（探针 69 项全过）。 |
 
 #### 跳过
@@ -179,7 +163,7 @@
 
 ### 9.5 本次对齐（上游 `989a6d7`）
 
-本轮覆盖上游 `561dd10`(#138) / `989a6d7`(#142)；`6265668`(#141) 的 Gopeed 引擎另见 §9.6（桌面以 exe 子进程形态重做）。
+本轮覆盖上游 `561dd10`(#138) / `989a6d7`(#142)；`6265668`(#141) 的 Gopeed 引擎另见 §9.6（桌面以独立可执行文件子进程形态重做）。
 
 #### 已移植
 
@@ -199,15 +183,16 @@
 
 上游 `6265668`(#141)「内置 Gopeed 下载引擎」在桌面**以完全不同的形态落地**：上游把 gomobile 编译的
 `libgojni.so` 用 `System.load` 装进本进程、配 `apiEnable=false` 走进程内 `rest.Dispatch`；
-桌面没有 Windows 内核库（内核仓库只有 4 个 Android ABI 的 AAR，无 exe/dll），改为把 Gopeed 官方
-**无界面 web/服务端版 `gopeed.exe` 作为子进程**拉起，走它的本地 HTTP API。
+桌面没有 Android 内核库（内核仓库只有 4 个 Android ABI 的 AAR），改为把 Gopeed 官方
+**无界面 web/服务端版可执行文件作为子进程**拉起，走它的本地 HTTP API；macOS 使用 `gopeed`，
+并按 Apple Silicon / Intel 架构获取对应内核。
 
 #### 已移植
 
 | 上游提交 | 内容 | 桌面实现与取舍 |
 | --- | --- | --- |
-| `6265668`(#141) | 内置 Gopeed 下载引擎（双下载器并存 + 内核获取） | **引擎进程** `data/gopeed/GopeedEngine.kt`：内核为 `gopeed.exe`，落 `<dataDir>/gopeed/{bin,storage}`；以 `-A 127.0.0.1 -P <随机空闲端口> -d <storage>` 启动（★ 2026-10-05 修正：早期误传的 `--temp-dir` 在 gopeed 服务端**不存在**（真实开关只有 `-A/-P/-u/-p/-T/-d/-w/-c`，见上游 `cmd/web/flags.go`），会让 gopeed 打印 usage 后立刻退出、引擎永远起不来；启动失败提示也已改为区分「进程已退出（带退出码+日志路径）」与「启动超时」），**不设 `-p` 密码 ⇒ 服务端不启用 Web 鉴权、无需 apiToken**；JDK 17 在 Windows 默认以 `CREATE_NO_WINDOW` 创建子进程（仅显式继承 stdio 时才清除），**不会冒出控制台黑窗**，stdout/stderr 重定向到 `gopeed.log`；启动后轮询 `/api/v1/info` 确认就绪（上限 20s）；pid 落文件，启动时按「pid 存活且可执行路径就是本应用内核」精确清理上次强杀留下的孤儿进程（避免它占着 bolt 存储锁）；注册 JVM 关闭钩子，退出应用时停引擎。**API 客户端**：专用 OkHttp 客户端 **`Proxy.NO_PROXY`**（否则用户配了代理时本地请求会被代理走），信封 `{code,msg,data}`，`code != 0` 取 `msg` 抛错；接口与上游一致：`GET /api/v1/info`、`POST /api/v1/tasks`、`GET /api/v1/tasks/{id}/status`、`PUT .../pause`、`PUT .../continue`、`DELETE /api/v1/tasks/{id}`；建任务体 `{"req":{"url","extra":{"header":{…}},"labels":{"yunxTaskId":…}},"opts":{"path","name","extra":{"connections":N}}}`，**`data` 是任务 ID 字符串**（与查询类接口的对象不同）。**内核获取** `GopeedKernelProvisioner`：从 **Gopeed 官方 Release** 取 `gopeed-web-<tag>-windows-{amd64,arm64}.zip`（按 `os.arch` 映射），下载走 `HttpClients.downloadClient`（跟随代理）、镜像前缀复用「GitHub 下载镜像」设置且失败自动回退直连、按 Release 的 `digest` 校验 sha256（长度非 64 则跳过）后解包导入，结束删除临时包；也支持导入本地 `.zip` / `.exe`。**DB/设置**：`download_task` 增 `engineTaskId`（DDL + ALTER 迁移 + `readTask` 容错 + `insert` 16 占位符）、`DownloadTaskDao` 增 `updateEngineTaskId` / `listSyncableEngineTasks`；设置增 `download_engine`（`builtin` 默认 / `gopeed`）。**下载管理** `DownloadManager`：`enqueue` 末尾统一分流（**平台非 GitHub** + 选了 Gopeed + 内核已导入才走引擎，GitHub 因引擎无法镜像回退仍走内置）；`engineTaskId` 非空的任务其 `start`/`pause`/`remove` 分别转发 `continue`/`pause`/`delete`（绝不落到内置下载器重复下载）；1s 轮询 `/status` 回写进度与 `_stats`（`ready/running/wait` 视为下载中、`done` 完成并写平均速度与清理回调、`error` 置失败、`pause` 置暂停），保活与 Windows 通知沿用既有 `onTaskStarted/onTaskFinished`/`notifyProgress`（引用计数保证恰好配对）；落盘目录沿用设置里的自定义下载目录或系统「下载」目录，路径经 `DownloadPathPolicy.sanitize` 净化（防穿越/非法字符）。**UI** `ui/screens/DownloadEngineScreen.kt`：设置 → 「下载引擎」二级页，展示引擎状态 / 内核体积与核心版本 / 落盘目录，提供「从官方下载内核」「导入本地内核」「重启引擎」「更换内核」「删除内核」与引擎切换（切到 Gopeed 前要求内核已导入）；内核下载进度用**窗口内 `FadeAlertDialog`**（按项目约定，且刻意不可取消）；失败原因用 `SelectionContainer` 原文可复制。 |
-| `6265668`(#141) 桌面差异 | Android 专属能力 | **去掉**：AAR 导入与 `System.load`、SAF tree Uri 反解、存储权限三态与「所有文件访问」引导、前台服务保活（桌面由 `WindowsKeepAwake` + 通知中心承担）、`DownloadEngineScreen` 里的「更新内核」入口（需先删后导）。**差异**：引擎不支持的「下载限速 / 失败重试 / GitHub 镜像回退」在桌面仍保留设置项（内置下载器继续使用），已在引擎页与设置项描述里注明「引擎不支持」；引擎内核版本号在官方包名里（`tag`），运行中经 `/api/v1/info` 读取展示。（注：「最大同时下载任务数」自 2026-10-05 起引擎已支持，见 §9.8。） |
+| `6265668`(#141) | 内置 Gopeed 下载引擎（双下载器并存 + 内核获取） | **引擎进程** `data/gopeed/GopeedEngine.kt`：macOS 内核为 `gopeed`，落 `<dataDir>/gopeed/{bin,storage}`；以 `-A 127.0.0.1 -P <随机空闲端口> -d <storage>` 启动；内核按 macOS 架构从 Gopeed 官方 Release 获取，下载、校验、代理同步、任务轮询与 UI 行为沿用桌面实现。 |
+| `6265668`(#141) 桌面差异 | Android 专属能力 | **去掉**：AAR 导入与 `System.load`、SAF tree Uri 反解、存储权限三态与「所有文件访问」引导、前台服务保活（桌面由 macOS 电源管理与应用内进度承担）、`DownloadEngineScreen` 里的「更新内核」入口（需先删后导）。**差异**：引擎不支持的「下载限速 / 失败重试 / GitHub 镜像回退」在桌面仍保留设置项（内置下载器继续使用），已在引擎页与设置项描述里注明「引擎不支持」；引擎内核版本号在官方包名里（`tag`），运行中经 `/api/v1/info` 读取展示。（注：「最大同时下载任务数」自 2026-10-05 起引擎已支持，见 §9.8。） |
 
 #### 验证
 
@@ -321,7 +306,7 @@
 
 | 上游内容 | 桌面实现与取舍 |
 | --- | --- |
-| `util/DiagnosticLog`（413 行） | 新增桌面版 `util/DiagnosticLog.kt`：结构、限流（2000 队列 + 300 行/秒）、轮转（单文件 2MB / 每模块 5 个 / 总量 10MB）、六个模块常量与全部 API 均与上游一致。**桌面差异**：目录固定 `<dataDir>/diagnostic_logs`（无 `getExternalFilesDir` 之说，用户可直接在资源管理器打开）；pid 取 `ProcessHandle.current().pid()`；开关读 `SettingsRepository.diagnosticMode`（Preferences）；**所有入口不再需要 `Context` 参数** |
+| `util/DiagnosticLog`（413 行） | 新增桌面版 `util/DiagnosticLog.kt`：结构、限流（2000 队列 + 300 行/秒）、轮转（单文件 2MB / 每模块 5 个 / 总量 10MB）、六个模块常量与全部 API 均与上游一致。**桌面差异**：目录固定 `<dataDir>/diagnostic_logs`（用户可直接在 Finder 打开）；pid 取 `ProcessHandle.current().pid()`；开关读 `SettingsRepository.diagnosticMode`（Preferences）；**所有入口不再需要 `Context` 参数** |
 | `DiagnosticNetworkInterceptor`（125 行） | 逐字节移植（OkHttp 拦截器，纯 JVM）：URL 过 `LogRedactor.url` 脱敏；**只有非 200/206 或抛异常才记 body**（各截 1.5KB），请求体用 `TeeRequestBody` 复制一份、对服务端零影响；关闭时首行 return |
 | `HttpClients` 挂拦截器 | api / download **两个客户端**都挂上（分片请求也记一行，靠 DiagnosticLog 的行数闸门限流） |
 | `SettingsRepository.diagnosticMode` | 新增（键 `diagnostic_mode`，默认关）；只存开关值，运行态由 `DiagnosticLog` 缓存，**改完立刻生效、不必重启** |
@@ -364,7 +349,7 @@
 | 欢迎页「7 大网盘」→「10 大网盘」、认证备份补光鸭/蓝奏云优享版/蓝奏云（#152） | **早已具备**：桌面引导页写的已是「10 大网盘」，`AuthBackupManager` 也已包含三个新平台的导出/导入与 DAO 装配 |
 | `suppressRequestedWithHeader()`（8 个登录页关闭 WebView 的 `X-Requested-With` 包名指纹，#152） | **不适用**：那是 Android WebView 的默认行为。桌面用 JCEF，不发这个头；桌面各 API 里显式写的 `X-Requested-With` 是各网盘接口自己的要求，与指纹无关 |
 | `applyDesktopClientHints()` / `DESKTOP_RENDER_FIX_JS`（WebView 同步 client hints + 修登录页整页空白/被裁，#161） | **不适用**：桌面 JCEF 就是真正的桌面 Chromium，client hints 天然正确；上游修的是「移动 WebView 里 `html,body{height:100%}` 被算成 0px + `overflow:hidden` 把整页裁掉」，桌面不存在该布局环境 |
-| `DownloadService`（Android 前台服务，89 行）、`MainActivity` 实况通知点击落到「下载」Tab（#163） | **不适用**：桌面没有前台服务与 Activity 跳转（窗口常驻）。保活走 `WindowsKeepAwake`，通知走 `WindowsToastNotifier` |
+| `DownloadService`（Android 前台服务，89 行）、`MainActivity` 实况通知点击落到「下载」Tab（#163） | **不适用**：桌面没有前台服务与 Activity 跳转（窗口常驻）。保活走 macOS 电源管理，进度在应用内显示，完成时可发 macOS 通知 |
 | `YunXApp.onCreate` 里的 `DownloadDebugLog.install` / `AndroidManifest` 改动（#163） | **桌面等价物已实现**：装配改在 `Main.kt`（`AppContext.init()` 之后调 `DownloadDebugLog.install()`，`runCatching` 包住）；无 Manifest 概念 |
 | `ui/screens/DownloadDebugScreen` 的单列长滚动布局（#163） | **重新设计为桌面双栏**：顶部一行放「返回 + 标题 + 复制快照 / 导出完整日志」，任务卡压成一行（图标 / 名称 / 状态 / 进度 / 实时速度 / 操作同排），正文左栏＝全局资源 + 线程表、右栏＝实时日志（等宽字体、跟随尾部），两栏各自滚动 —— 桌面横向空间充裕而竖直空间更紧 |
 | `ui/components/OperationSheet` + `LocalFileOperationBusy`（#164，ModalBottomSheet 封装） | **未移植**：桌面没有 ModalBottomSheet，各操作面板走 `FadeAlertDialog` / 就地覆盖层。`CloudFileSheets` 的 `ActionItem` 也未加 `busy` 置灰 —— 桌面点菜单项后**立即关闭面板或切到下一步**（下一步自身已按 `operating` 禁用按钮），不存在上游触屏场景下的重复点击窗口 |

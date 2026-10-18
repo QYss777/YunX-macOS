@@ -4,31 +4,27 @@
 
 ## 环境要求
 
-要求：Windows 10/11 x64。
+要求：macOS 12 或更高版本，JDK 17。Apple Silicon 与 Intel 架构需使用对应的构建环境。
 
 | 依赖 | 说明 |
 | --- | --- |
-| JDK 17 | 缺失时 `jdk-setup.ps1` 自动下载便携版 |
-| Gradle | 由 wrapper 自动拉取，无需手动安装 |
-| **C++ 编译器** | 托盘菜单配色桥接层 `native/darkmode.cpp` 需编译为 `darkmode.dll`：优先 `cl.exe`（Visual Studio 2019/2022，勾选「使用 C++ 的桌面开发」工作负载），否则回退 `g++`（MinGW） |
-| Inno Setup 6 | 仅打安装包需要；缺失时脚本自动下载并静默安装 |
+| JDK 17 | 用于 Gradle 编译与 jpackage 打包 |
+| Gradle | 使用本机 Gradle 或项目 wrapper |
+| Xcode Command Line Tools | 提供 macOS 原生构建工具与 `codesign` / `hdiutil` |
 
-**缺 C++ 编译器时**：`run` / `package` / `installer` 会在编译 `darkmode.dll` 这一步失败；
-`run.ps1 build` 只编译 Kotlin，不受影响。
+macOS 构建不需要 Windows 的 C++、Inno Setup 或 PowerShell 工具链。
 
 ## 命令
 
-```powershell
-git clone https://github.com/tidain/YunX-Desktop.git
-cd YunX-Desktop
+```bash
+git clone https://github.com/liuyinkang0115-debug/YunX-macOS.git
+cd YunX-macOS
 
-.\run.ps1 run        # 编译并启动（开发，含 darkmode.dll）
-.\run.ps1 build      # 仅编译 Kotlin（不需要 C++ 编译器）
-.\run.ps1 package    # 免安装便携版 → release\YunX-Desktop\
-.\run.ps1 installer  # 单文件安装程序 → release\YunX-Desktop-setup-*.exe
+gradle :desktop:run        # 编译并启动开发版
+gradle :desktop:test       # 运行桌面测试
+gradle :desktop:packageDmg # 生成 DMG 安装包
+gradle :desktop:packagePkg # 生成 PKG 安装包
 ```
-
-也可双击 `run.bat`（走同一入口）。中文向导语言包随仓库分发（`installer\ChineseSimplified.isl`）。
 
 ## 版本号
 
@@ -41,8 +37,9 @@ cd YunX-Desktop
 
 | 产物 | 位置 | 说明 |
 | --- | --- | --- |
-| 便携版 | `release\YunX-Desktop\` | 整个文件夹拷走即用，双击 `YunX-Desktop.exe` 运行，无需安装 |
-| 安装程序 | `release\YunX-Desktop-setup-<版本>.exe` | 每用户安装到 `%LOCALAPPDATA%\Programs\YunX-Desktop`，无需管理员权限；创建开始菜单 / 桌面快捷方式「云析」，可卸载 |
+| DMG 安装包 | `desktop/build/compose/binaries/main/dmg/YunX-Desktop-<版本>.dmg` | 双击后将应用拖入「应用程序」目录 |
+| PKG 安装包 | `desktop/build/compose/binaries/main/pkg/YunX-Desktop-<版本>.pkg` | 使用 macOS 安装器安装 |
+| ZIP 压缩包 | GitHub Release 附件 | 解压后直接运行 `YunX-Desktop.app`，适合便携分发 |
 
 打包脚本会自动结束正在运行的程序实例，并在输出目录被占用时重试删除。
 
@@ -51,7 +48,7 @@ cd YunX-Desktop
 | 目录 | 说明 |
 | --- | --- |
 | `desktop/` | 应用本体（Kotlin + Compose Multiplatform） |
-| `desktop/native/` | 原生桥接层源码（`darkmode.cpp` → `darkmode.dll`） |
-| `launcher/` | 自研启动器（C# 编译为无控制台窗口的 exe；固定读取 `app\YunX-Desktop.cfg`，改 exe 名或放在中文路径下都不会失效，同时负责启动闪屏与主窗口交叉淡入） |
-| `installer/` | Inno Setup 脚本与中文语言包 |
+| `desktop/native/` | 原生桥接层源码；macOS 使用 JNA 与系统命令完成平台集成 |
+| `launcher/` | 历史 Windows 启动器兼容代码；macOS 由 `jpackage` 生成应用启动器 |
+| `installer/` | 历史 Windows 安装脚本目录，macOS 打包由 Gradle 与 `jpackage` 完成 |
 | `docs/` | 文档（见 [README](../README.md#文档)） |
