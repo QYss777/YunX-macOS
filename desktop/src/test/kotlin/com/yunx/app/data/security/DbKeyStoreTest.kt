@@ -1,5 +1,6 @@
 package com.yunx.app.data.security
 
+import java.io.File
 import org.junit.Assert.assertArrayEquals
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse

@@ -90,6 +90,7 @@ fun main(args: Array<String>) {
     // （CEF 消息循环由 CefApp 内部 Swing Timer 在 AWT EDT 泵动，与初始化线程无关）。
     // macOS 受 AppKit 主线程约束，保持阻塞式初始化。
     val isMac = System.getProperty("os.name", "").lowercase().contains("mac")
+    val isWindows = System.getProperty("os.name", "").lowercase().contains("win")
     if (isMac) {
         JcefHolder.initBlocking()
     }
@@ -143,22 +144,29 @@ fun main(args: Array<String>) {
                         image = icon,
                         onLeftClick = { showMainWindowFromTray(mainWindow) },
                         onRightClick = { x, y ->
-                            val cmd = Win32PopupMenu.show(
-                                items = listOf(
-                                    "显示主窗口" to 1,
-                                    "-" to 0,
-                                    "退出" to 2
-                                ),
-                                x = x, y = y
-                            )
-                            when (cmd) {
-                                1 -> showMainWindowFromTray(mainWindow)
-                                2 -> {
-                                    val w = mainWindow
-                                    if (w != null) WindowFx.fadeOutThen(w) { exitApplication() }
-                                    else exitApplication()
+                            if (isWindows) {
+                                val cmd = Win32PopupMenu.show(
+                                    items = listOf(
+                                        "显示主窗口" to 1,
+                                        "-" to 0,
+                                        "退出" to 2
+                                    ),
+                                    x = x, y = y
+                                )
+                                when (cmd) {
+                                    1 -> showMainWindowFromTray(mainWindow)
+                                    2 -> {
+                                        val w = mainWindow
+                                        if (w != null) WindowFx.fadeOutThen(w) { exitApplication() }
+                                        else exitApplication()
+                                    }
                                 }
                             }
+                        },
+                        onExit = {
+                            val w = mainWindow
+                            if (w != null) WindowFx.fadeOutThen(w) { exitApplication() }
+                            else exitApplication()
                         }
                     )
                 }
@@ -223,6 +231,10 @@ private fun loadWindowIcon(): androidx.compose.ui.graphics.painter.Painter? = ru
  * 内嵌浏览器诊断冒烟：主线程初始化 JCEF → 创建浏览器加载页面 → 等待 20s → 输出 Cookie 统计。
  */
 private fun runJcefSmoke(url: String) {
+    Thread.setDefaultUncaughtExceptionHandler { thread, error ->
+        System.err.println("SMOKE: uncaught thread=${thread.name} ${error::class.qualifiedName}: ${error.message}")
+        error.printStackTrace(System.err)
+    }
     println("SMOKE: init JCEF...")
     JcefHolder.initBlocking(noSandbox = true)
     val app = JcefHolder.app()
@@ -268,7 +280,17 @@ private fun runJcefSmoke(url: String) {
         }
     })
     val browser = client.createBrowser(url, false, false)
-    // JCEF 默认延迟到 UI 组件显示时才真正创建；冒烟无 UI，需立即创建
+    // 把组件挂到真实 AWT 窗口，覆盖 macOS CefBrowserWindowMac.getWindowHandle
+    // 的模块访问路径（仅调用 createImmediately 无法验证这一段）。
+    val smokeFrame = javax.swing.JFrame("YunX JCEF Smoke").apply {
+        defaultCloseOperation = javax.swing.WindowConstants.DISPOSE_ON_CLOSE
+        layout = java.awt.BorderLayout()
+        setSize(900, 650)
+    }
+    javax.swing.SwingUtilities.invokeAndWait {
+        smokeFrame.add(browser.uiComponent, java.awt.BorderLayout.CENTER)
+        smokeFrame.isVisible = true
+    }
     browser.createImmediately()
     println("SMOKE: browser created, waiting 25s for page load...")
     Thread.sleep(25000)
@@ -313,6 +335,8 @@ private fun runJcefSmoke(url: String) {
     val waitedCount = readCookies().size
     println("SMOKE: cookies read immediately(no wait)=$immediateCount, after 500ms=$waitedCount")
     println("SMOKE: cookie samples=${readCookies().take(5)}")
+
+    runCatching { javax.swing.SwingUtilities.invokeAndWait { smokeFrame.dispose() } }
 
     // API 回环验证：写入测试 Cookie 再读取
     val testCookie = org.cef.network.CefCookie(

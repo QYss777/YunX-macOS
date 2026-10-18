@@ -36,9 +36,16 @@ dependencies {
     implementation("net.java.dev.jna:jna:5.14.0")
     implementation("net.java.dev.jna:jna-platform:5.14.0")
 
-    // 方案 B：内嵌 Chromium 浏览器（JCEF），jcefmaven 负责原生库装载
+    // 方案 B：内嵌 Chromium 浏览器（JCEF），jcefmaven 负责原生库装载。
+    // 原生包必须与构建平台匹配；macOS 同时支持 Apple Silicon 与 Intel。
     implementation("me.friwi:jcefmaven:132.3.1")
-    implementation("me.friwi:jcef-natives-windows-amd64:jcef-1770317+cef-132.3.1+g144febe+chromium-132.0.6834.83")
+    if (System.getProperty("os.name", "").lowercase().contains("mac")) {
+        val macArch = System.getProperty("os.arch", "").lowercase()
+            .let { if (it.contains("aarch64") || it.contains("arm64")) "arm64" else "amd64" }
+        implementation("me.friwi:jcef-natives-macosx-$macArch:jcef-1770317+cef-132.3.1+g144febe+chromium-132.0.6834.83")
+    } else {
+        implementation("me.friwi:jcef-natives-windows-amd64:jcef-1770317+cef-132.3.1+g144febe+chromium-132.0.6834.83")
+    }
 
     testImplementation(kotlin("test"))
     testImplementation("junit:junit:4.13.2")
@@ -85,6 +92,22 @@ val nativeSrcDir = file("native")
 val nativeOutDir = layout.buildDirectory.dir("native").get().asFile
 val darkModeSrc = File(nativeSrcDir, "darkmode.cpp")
 val darkModeOut = File(nativeOutDir, "darkmode.dll")
+val hostOs = System.getProperty("os.name", "").lowercase()
+val isWindowsHost = hostOs.contains("win")
+val isMacHost = hostOs.contains("mac") || hostOs.contains("darwin")
+
+// JCEF 的 macOS 原生窗口桥接会通过反射访问 AWT 内部类；Java 17 模块默认不开放该包。
+// 这些参数只在 macOS 加入，Windows/Linux 不改变原有启动行为。
+val macJcefJvmArgs = if (isMacHost) listOf(
+    "--add-opens=java.desktop/sun.awt=ALL-UNNAMED",
+    "--add-opens=java.desktop/java.awt=ALL-UNNAMED",
+    "--add-opens=java.desktop/sun.lwawt=ALL-UNNAMED",
+    // CefBrowserWindowMac directly links these JDK-internal classes (not reflection only),
+    // so add-opens alone is insufficient and produces "module ... does not export".
+    "--add-exports=java.desktop/sun.awt=ALL-UNNAMED",
+    "--add-exports=java.desktop/sun.lwawt=ALL-UNNAMED",
+    "--add-exports=java.desktop/sun.lwawt.macosx=ALL-UNNAMED"
+) else emptyList()
 
 // 定位 MSVC 的 vcvars64.bat（cl 直接调会找不到 windows.h / CRT 库，必须先 call 它）
 fun findMsvcVcvars(): File? {
@@ -113,6 +136,9 @@ val compileDarkMode by tasks.registering(Exec::class) {
     doFirst {
         nativeOutDir.mkdirs()
     }
+    // darkmode.cpp is a Windows-only bridge. Keep the task name available for
+    // existing scripts, but make it a no-op on macOS/Linux.
+    onlyIf { isWindowsHost }
     if (vcvars != null) {
         commandLine(
             "cmd", "/c",
@@ -129,13 +155,15 @@ val compileDarkMode by tasks.registering(Exec::class) {
             darkModeSrc.absolutePath, "-lkernel32", "-luser32"
         )
     }
+    if (!isWindowsHost) commandLine("true")
 }
 
 // 开发运行（:desktop:run）时把 DLL 目录并入 java.library.path，并保留 JDK bin（jawt 等原生库）
 tasks.withType<JavaExec> {
     dependsOn(compileDarkMode)
     val jvmBin = File(System.getProperty("java.home"), "bin").absolutePath
-    systemProperty("java.library.path", "${nativeOutDir.absolutePath};$jvmBin")
+    systemProperty("java.library.path", listOf(nativeOutDir.absolutePath, jvmBin).joinToString(File.pathSeparator))
+    jvmArgs(macJcefJvmArgs)
 }
 
 // 收集运行时依赖 jar 路径（供便携版 app-image 打包）
@@ -156,13 +184,17 @@ tasks.register<Sync>("exportRuntimeLibs") {
 compose.desktop {
     application {
         mainClass = "com.yunx.app.MainKt"
+        jvmArgs(*macJcefJvmArgs.toTypedArray())
         nativeDistributions {
-            targetFormats(TargetFormat.Exe)
+            if (isWindowsHost) targetFormats(TargetFormat.Exe)
+            else if (hostOs.contains("mac")) targetFormats(TargetFormat.Dmg, TargetFormat.Pkg)
             // sqlite-jdbc 通过反射加载 java.sql.Driver，jlink 自动检测不到，必须显式声明
             modules("java.sql", "java.naming")
-            // 每用户安装（%LOCALAPPDATA%\Programs），无需管理员权限
-            windows {
-                perUserInstall = true
+            if (isWindowsHost) {
+                // 每用户安装（%LOCALAPPDATA%\Programs），无需管理员权限
+                windows {
+                    perUserInstall = true
+                }
             }
             packageName = "YunX-Desktop"
             packageVersion = appVersion

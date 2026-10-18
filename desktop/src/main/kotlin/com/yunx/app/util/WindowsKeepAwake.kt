@@ -13,10 +13,11 @@ import java.util.concurrent.atomic.AtomicInteger
 object WindowsKeepAwake {
     private interface Kernel32 : StdCallLibrary {
         fun SetThreadExecutionState(esFlags: Int): Int
+    }
 
-        companion object {
-            val INSTANCE: Kernel32 = Native.load("kernel32", Kernel32::class.java)
-        }
+    private val isWindows = System.getProperty("os.name", "").lowercase().contains("win")
+    private val kernel32: Kernel32? by lazy {
+        if (!isWindows) null else runCatching { Native.load("kernel32", Kernel32::class.java) }.getOrNull()
     }
 
     private const val ES_CONTINUOUS = 0x80000000.toInt()
@@ -27,18 +28,20 @@ object WindowsKeepAwake {
     private val refs = AtomicInteger(0)
 
     fun acquire() {
+        if (!isWindows) return
         if (refs.getAndIncrement() == 0) {
             executor.execute {
-                runCatching { Kernel32.INSTANCE.SetThreadExecutionState(ES_CONTINUOUS or ES_SYSTEM_REQUIRED) }
+                runCatching { kernel32?.SetThreadExecutionState(ES_CONTINUOUS or ES_SYSTEM_REQUIRED) }
             }
         }
     }
 
     fun release() {
+        if (!isWindows) return
         if (refs.decrementAndGet() <= 0) {
             refs.set(0)
             executor.execute {
-                runCatching { Kernel32.INSTANCE.SetThreadExecutionState(ES_CONTINUOUS) }
+                runCatching { kernel32?.SetThreadExecutionState(ES_CONTINUOUS) }
             }
         }
     }

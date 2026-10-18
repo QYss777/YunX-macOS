@@ -19,12 +19,12 @@ import java.util.concurrent.atomic.AtomicLong
 import kotlin.coroutines.coroutineContext
 
 /**
- * Gopeed 内核（Windows exe）的云端获取：从 **Gopeed 官方 Release** 拉取
- * `gopeed-web-<版本>-windows-<架构>.zip`（无界面 web/服务端版），下载 → 校验 → 交给
+ * Gopeed 内核的云端获取：从 **Gopeed 官方 Release** 拉取
+ * `gopeed-web-<版本>-<平台>-<架构>.zip`（无界面 web/服务端版），下载 → 校验 → 交给
  * [GopeedEngine.installFromArchive] 解包导入。
  *
- * 与上游 Android 版的差别：上游从私有内核仓库取 4 个 ABI 的 AAR；桌面直接取官方 Windows 包，
- * 架构按 `os.arch` 映射（amd64 / arm64），官方包名后缀与之一一对应。
+ * 与上游 Android 版的差别：上游从私有内核仓库取 4 个 ABI 的 AAR；桌面直接取官方桌面包，
+ * 平台和架构按当前系统映射（windows/macos/linux + amd64/arm64）。
  *
  * 下载走项目既有的 [HttpClients.downloadClient]（跟随代理设置）；镜像前缀沿用「GitHub 下载镜像」
  * 设置（未配置时用 [UpdateChecker.MIRROR_PREFIX]），镜像失败自动回退直连。
@@ -34,7 +34,7 @@ object GopeedKernelProvisioner {
     private const val TAG = "GopeedKernel"
     private const val RELEASES_LATEST_URL = "https://api.github.com/repos/GopeedLab/gopeed/releases/latest"
 
-    /** 官方包名前缀/后缀：`gopeed-web-v1.9.3-windows-amd64.zip` */
+    /** 官方包名前缀/后缀：`gopeed-web-v1.9.3-macos-arm64.zip` */
     private const val ASSET_PREFIX = "gopeed-web-"
     private const val ASSET_ARCH_SUFFIX = ".zip"
 
@@ -88,6 +88,16 @@ object GopeedKernelProvisioner {
         }
     }
 
+    private fun platformSuffix(): String {
+        val os = System.getProperty("os.name", "").lowercase()
+        return when {
+            os.contains("win") -> "windows"
+            os.contains("mac") || os.contains("darwin") -> "macos"
+            os.contains("linux") -> "linux"
+            else -> throw IllegalStateException("当前系统不支持 Gopeed 内核：$os")
+        }
+    }
+
     /**
      * 查询官方最新 Release，拼出本机可用的内核计划。
      * @param mirrorPrefix 用户配置的镜像前缀；null/空用内置默认镜像
@@ -97,12 +107,12 @@ object GopeedKernelProvisioner {
         val json = fetchLatestJson()
         val tag = json.optString("tag_name")
         if (tag.isBlank()) throw IllegalStateException("官方 Release 缺少版本号")
-        val wanted = "$ASSET_PREFIX$tag-windows-${archSuffix()}$ASSET_ARCH_SUFFIX"
+        val wanted = "$ASSET_PREFIX$tag-${platformSuffix()}-${archSuffix()}$ASSET_ARCH_SUFFIX"
         val asset = json.optJSONArray("assets")?.let { arr ->
             (0 until arr.length())
                 .mapNotNull { arr.optJSONObject(it) }
                 .firstOrNull { it.optString("name").equals(wanted, ignoreCase = true) }
-        } ?: throw IllegalStateException("官方 Release（$tag）里没有 Windows 内核包 $wanted")
+        } ?: throw IllegalStateException("官方 Release（$tag）里没有当前平台内核包 $wanted")
         val direct = asset.optString("browser_download_url")
         if (direct.isBlank()) throw IllegalStateException("内核包缺少下载地址")
         Plan(

@@ -1,6 +1,7 @@
 package com.yunx.app.util
 
 import java.awt.Image
+import java.awt.MenuItem
 import java.awt.PopupMenu
 import java.awt.SystemTray
 import java.awt.TrayIcon
@@ -32,21 +33,29 @@ object TrayManager {
     fun install(
         image: BufferedImage,
         onLeftClick: () -> Unit,
-        onRightClick: (Int, Int) -> Unit
+        onRightClick: (Int, Int) -> Unit,
+        onExit: () -> Unit = {}
     ) {
         if (!SystemTray.isSupported()) return
         if (trayIcon != null) uninstall()
 
+        val popup = PopupMenu()
+        val isWindows = System.getProperty("os.name", "").lowercase().contains("win")
+        if (!isWindows) {
+            popup.add(MenuItem("显示主窗口").also { it.addActionListener { onLeftClick() } })
+            popup.addSeparator()
+            popup.add(MenuItem("退出").also { it.addActionListener { onExit() } })
+        }
         val icon = TrayIcon(image.getScaledInstance(16, 16, Image.SCALE_SMOOTH), "云析 YunX-Desktop").apply {
             isImageAutoSize = true
-            // 空 PopupMenu：Windows 必须设才能收到右键事件
-            popupMenu = PopupMenu()
+            // Windows 使用 Win32 菜单桥接；macOS/Linux 使用 AWT 原生托盘菜单。
+            popupMenu = popup
             addMouseListener(object : MouseAdapter() {
                 override fun mouseClicked(e: MouseEvent) {
                     if (e.button == MouseEvent.BUTTON1) onLeftClick()
                 }
                 override fun mousePressed(e: MouseEvent) {
-                    if (e.button == MouseEvent.BUTTON3) {
+                    if (isWindows && e.button == MouseEvent.BUTTON3) {
                         e.consume()
                         onRightClick(e.xOnScreen, e.yOnScreen)
                     }

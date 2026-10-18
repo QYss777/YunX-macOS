@@ -178,7 +178,7 @@ fun DownloadEngineScreen(
         provisionJob?.cancel()
     }
 
-    /** 导入本地内核（官方 zip 或裸 gopeed.exe） */
+    /** 导入本地内核（官方 zip 或对应平台的 Gopeed 可执行文件） */
     fun importKernel() {
         scope.launch {
             val path = withContext(Dispatchers.IO) {
@@ -339,7 +339,7 @@ fun DownloadEngineScreen(
                     ) {
                         Icon(Icons.Outlined.UploadFile, contentDescription = null, modifier = Modifier.size(18.dp))
                         Spacer(Modifier.width(6.dp))
-                        Text("导入本地内核（.zip / .exe）")
+                        Text("导入本地内核（.zip / 可执行文件）")
                     }
                 } else {
                     Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -518,7 +518,7 @@ fun DownloadEngineScreen(
                     ) {
                         Icon(Icons.Outlined.UploadFile, contentDescription = null, modifier = Modifier.size(18.dp))
                         Spacer(Modifier.width(8.dp))
-                        Text("导入本地内核（.zip / .exe）")
+                        Text("导入本地内核（.zip / 可执行文件）")
                     }
                 }
             },

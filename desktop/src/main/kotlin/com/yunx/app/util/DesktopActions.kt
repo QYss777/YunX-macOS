@@ -52,8 +52,13 @@ object DesktopActions {
         val file = File(path)
         if (!file.exists()) return false
         return runCatching {
-            val cmd = arrayOf("explorer.exe", "/select,", file.absolutePath)
-            ProcessBuilder(*cmd).start()
+            if (isMac()) {
+                ProcessBuilder("open", "-R", file.absolutePath).start()
+            } else if (isWindows()) {
+                ProcessBuilder("explorer.exe", "/select,", file.absolutePath).start()
+            } else {
+                ProcessBuilder("xdg-open", file.parentFile?.absolutePath ?: file.absolutePath).start()
+            }
             true
         }.getOrDefault(false)
     }
@@ -63,7 +68,12 @@ object DesktopActions {
         val dir = File(path)
         if (!dir.isDirectory && !dir.mkdirs()) return false
         return runCatching {
-            ProcessBuilder("explorer.exe", dir.absolutePath).start()
+            val command = when {
+                isMac() -> listOf("open", dir.absolutePath)
+                isWindows() -> listOf("explorer.exe", dir.absolutePath)
+                else -> listOf("xdg-open", dir.absolutePath)
+            }
+            ProcessBuilder(command).start()
             true
         }.getOrDefault(false)
     }
@@ -75,6 +85,13 @@ object DesktopActions {
      * 拿不到启动器 exe（开发运行 `gradle run`）时返回 false，由调用方提示手动重启。
      */
     fun restartApp(): Boolean {
+        if (isMac()) {
+            val appPath = macAppBundle() ?: return false
+            return runCatching {
+                ProcessBuilder("sh", "-c", "sleep 2; open -n \"$appPath\"").start()
+                true
+            }.getOrDefault(false)
+        }
         val exe = launcherExe() ?: return false
         return runCatching {
             // 用 cmd 延迟启动：本进程马上就会退出，必须等它把文件句柄都放掉。
@@ -93,6 +110,14 @@ object DesktopActions {
             File(p).takeIf { it.isFile }?.let { return it }
         }
         return File(File(System.getProperty("user.dir") ?: "."), "YunX-Desktop.exe").takeIf { it.isFile }
+    }
+
+    private fun macAppBundle(): File? {
+        val appPath = System.getProperty("jpackage.app-path") ?: return null
+        val executable = File(appPath)
+        val contents = executable.parentFile
+        val app = contents?.parentFile?.parentFile
+        return app?.takeIf { it.name.endsWith(".app") && it.isDirectory }
     }
 
     /** 用系统默认浏览器打开链接 */
@@ -118,13 +143,16 @@ object DesktopActions {
         val isMac = osName.contains("mac") || osName.contains("darwin")
 
         if (isMac) {
+            val previousDirectoryMode = System.getProperty("apple.awt.fileDialogForDirectories")
+            System.setProperty("apple.awt.fileDialogForDirectories", "true")
             val dialog = FileDialog(null as Frame?, "选择文件夹", FileDialog.LOAD)
             dialog.isMultipleMode = false
-            System.setProperty("apple.awt.fileDialogForDirectories", "true")
             dialog.isVisible = true
             val dir = dialog.directory
             val file = dialog.file
             dialog.dispose()
+            if (previousDirectoryMode == null) System.clearProperty("apple.awt.fileDialogForDirectories")
+            else System.setProperty("apple.awt.fileDialogForDirectories", previousDirectoryMode)
             return when {
                 dir == null -> null
                 file == null -> dir
@@ -315,4 +343,10 @@ object DesktopActions {
         Regex("%([A-Za-z_][A-Za-z0-9_]*)%").replace(path) { m ->
             System.getenv(m.groupValues[1]) ?: m.value
         }
+
+    private fun isWindows(): Boolean =
+        System.getProperty("os.name", "").lowercase().contains("win")
+
+    private fun isMac(): Boolean =
+        System.getProperty("os.name", "").lowercase().let { it.contains("mac") || it.contains("darwin") }
 }

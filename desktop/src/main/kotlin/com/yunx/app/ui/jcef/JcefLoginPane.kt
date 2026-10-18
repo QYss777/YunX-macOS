@@ -54,6 +54,8 @@ import org.cef.misc.BoolRef
 import org.cef.network.CefCookie
 import org.cef.network.CefCookieManager
 import java.awt.BorderLayout
+import java.util.concurrent.CountDownLatch
+import java.util.concurrent.TimeUnit
 import javax.swing.JPanel
 
 private const val TAG = "YunX-JCEF-UI"
@@ -61,7 +63,7 @@ private const val TAG = "YunX-JCEF-UI"
 /**
  * 内嵌浏览器登录面板（方案 B）：
  * - SwingPanel 嵌入真实 Chromium（JCEF），加载网盘登录页；
- * - 每 1.5 秒轮询全局 Cookie，检测到必需键后提示「已检测到登录态」，一键保存；
+ * - 每 1.5 秒轮询全局 Cookie，检测到必需键后自动保存；校验失败时可手动重试；
  * - 底部提供「自动导入浏览器 Cookie」（方案 A）与「手动粘贴」备选。
  *
  * @param requiredKeys 必须全部出现的 Cookie 键名（与键名集合取交集，全命中才算登录态）
@@ -83,6 +85,7 @@ fun JcefLoginPane(
     val scope = rememberCoroutineScope()
     val app = JcefHolder.app()
     var detectedCookie by remember { mutableStateOf<String?>(null) }
+    var autoSaveAttemptedCookie by remember { mutableStateOf<String?>(null) }
     var isSaving by remember { mutableStateOf(false) }
     var browserFailure by remember { mutableStateOf<String?>(null) }
 
@@ -93,6 +96,13 @@ fun JcefLoginPane(
         } else {
             try {
                 val client: CefClient = app.createClient()
+                // The default Chromium context menu creates a native AppKit popup on macOS.
+                // With a heavyweight JCEF component embedded in SwingPanel that popup can
+                // retain the mouse grab after dismissal. Login only needs the page itself,
+                // so suppress the native menu and let normal browser mouse events continue.
+                if (isMacOs()) {
+                    client.addContextMenuHandler(MacContextMenuHandler)
+                }
                 val browser: CefBrowser = client.createBrowser(loginUrl, false, false)
                 // 不调用 createImmediately()：它会在画布尚未挂到窗口（尺寸为 0）时
                 // 强行创建原生浏览器窗口，首次绘制丢失 → 白屏直到手动缩放窗口。
@@ -124,6 +134,25 @@ fun JcefLoginPane(
             val cookie = withContext(Dispatchers.IO) { collectCookies(domains, requiredKeys, anyOfKeys) }
             if (cookie != null) detectedCookie = cookie
             delay(1500)
+        }
+    }
+
+    // Once the embedded page has a complete login session, persist it without requiring
+    // a second click. The button below remains available for retry when server validation
+    // fails transiently.
+    LaunchedEffect(detectedCookie) {
+        val cookie = detectedCookie ?: return@LaunchedEffect
+        if (autoSaveAttemptedCookie == cookie) return@LaunchedEffect
+        if (isSaving) return@LaunchedEffect
+        autoSaveAttemptedCookie = cookie
+        isSaving = true
+        val ok = runCatching { onSave(cookie) }.getOrDefault(false)
+        isSaving = false
+        if (ok) {
+            SnackbarController.show("登录成功")
+            onSaved()
+        } else {
+            SnackbarController.show("已检测到登录态，请点击保存登录重试")
         }
     }
 
@@ -298,6 +327,36 @@ fun JcefLoginPane(
 
 private class BrowserHolder(val client: CefClient, val browser: CefBrowser)
 
+private fun isMacOs(): Boolean =
+    System.getProperty("os.name", "").lowercase().contains("mac")
+
+/** Prevent the macOS native context-menu popup from retaining the JCEF mouse grab. */
+private object MacContextMenuHandler : org.cef.handler.CefContextMenuHandler {
+    override fun onBeforeContextMenu(
+        browser: CefBrowser,
+        frame: org.cef.browser.CefFrame,
+        params: org.cef.callback.CefContextMenuParams,
+        model: org.cef.callback.CefMenuModel
+    ) {
+        model.clear()
+    }
+
+    override fun onContextMenuCommand(
+        browser: CefBrowser,
+        frame: org.cef.browser.CefFrame,
+        params: org.cef.callback.CefContextMenuParams,
+        commandId: Int,
+        eventFlags: Int
+    ): Boolean = false
+
+    override fun onContextMenuDismissed(browser: CefBrowser, frame: org.cef.browser.CefFrame) {
+        // Reassert focus after CEF has finished dismissing a menu. This is harmless when
+        // the menu was suppressed and covers native menu implementations that still emit
+        // a dismissal callback on macOS.
+        browser.setFocus(true)
+    }
+}
+
 /**
  * 从全局 Cookie 管理器收集目标域 Cookie；必需键齐全时返回 "k=v; ..." 串。
  *
@@ -317,17 +376,27 @@ private fun collectCookies(
     return runCatching {
         val manager = CefCookieManager.getGlobalManager()
         val pairs = java.util.concurrent.ConcurrentLinkedQueue<Pair<String, String>>()
-        manager.visitAllCookies(object : CefCookieVisitor {
+        val finished = CountDownLatch(1)
+        val accepted = manager.visitAllCookies(object : CefCookieVisitor {
             override fun visit(cookie: CefCookie, count: Int, total: Int, delete: BoolRef): Boolean {
-                val domain = cookie.domain ?: ""
-                if (domains.any { domain.contains(it) }) {
-                    pairs.add((cookie.name ?: "") to (cookie.value ?: ""))
+                try {
+                    val domain = cookie.domain.orEmpty()
+                    if (domains.any { cookieDomainMatches(domain, it) }) {
+                        val name = cookie.name.orEmpty()
+                        if (name.isNotBlank()) pairs.add(name to cookie.value.orEmpty())
+                    }
+                } finally {
+                    // CEF reports the zero-based item index and total item count. A store
+                    // with no cookies may not invoke the visitor at all, hence the timeout.
+                    if (total > 0 && count + 1 >= total) finished.countDown()
                 }
                 return true
             }
         })
-        // 等待 IO 线程回调完成（CEF 遍历 Cookie 库很快，几百毫秒足够）
-        Thread.sleep(400)
+        if (!accepted) return@runCatching null
+        // visitAllCookies is asynchronous; waiting on a completion condition avoids both
+        // racing the callback and blocking the CEF IO thread with a fixed sleep.
+        finished.await(2, TimeUnit.SECONDS)
         val all = pairs.toList()
         if (all.isNotEmpty()) {
             Log.d(TAG, "cookies for $domains: ${all.size} (keys=${all.map { it.first }.distinct()})")
@@ -339,6 +408,13 @@ private fun collectCookies(
         if (!requiredOk && !anyOk) return null
         all.joinToString("; ") { "${it.first}=${it.second}" }
     }.getOrNull()
+}
+
+private fun cookieDomainMatches(cookieDomain: String, configuredDomain: String): Boolean {
+    val cookie = cookieDomain.trim().removePrefix(".").lowercase()
+    val configured = configuredDomain.trim().removePrefix(".").lowercase()
+    if (cookie.isEmpty() || configured.isEmpty()) return false
+    return cookie == configured || cookie.endsWith(".$configured") || configured.endsWith(".$cookie")
 }
 
 /**

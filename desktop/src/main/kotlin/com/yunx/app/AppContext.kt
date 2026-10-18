@@ -9,7 +9,8 @@ import java.util.prefs.Preferences
  * 数据/缓存/临时目录、以及非设置类的杂项偏好（onboarding、忽略版本、迅雷设备指纹）。
  *
  * 目录分三层（自 2026-10-11 起后两层可在「设置 → 储存目录」里改，改完需重启生效）：
- * 1. [dataDir] 数据根目录：默认 `<用户目录>/.yunx-desktop`，可用环境变量 `YUNX_DESKTOP_DATA_DIR` 覆盖；
+ * 1. [dataDir] 数据根目录：Windows 默认 `<用户目录>/.yunx-desktop`，macOS 默认
+ *    `~/Library/Application Support/YunX-Desktop`，可用环境变量 `YUNX_DESKTOP_DATA_DIR` 覆盖；
  *    日志（[filesDir]）与诊断日志目录跟随它，**不可在应用内更改**。
  * 2. [dbDir] 数据库目录：默认＝[dataDir]，放 `yunx.db` 与 `credential.key`（两者必须同处一地）。
  * 3. [cacheDir] 缓存根目录：默认＝`<dataDir>/cache`，放下载分片、合并临时文件、JCEF 浏览器数据。
@@ -19,9 +20,13 @@ import java.util.prefs.Preferences
  */
 object AppContext {
 
-    /** 应用数据根目录：默认 <用户目录>/.yunx-desktop；可用环境变量 YUNX_DESKTOP_DATA_DIR 覆盖（测试/沙箱环境用） */
+    /** 应用数据根目录；可用环境变量 YUNX_DESKTOP_DATA_DIR 覆盖（测试/沙箱环境用） */
     val dataDir: File = System.getenv("YUNX_DESKTOP_DATA_DIR")?.let { File(it) }
-        ?: File(System.getProperty("user.home"), ".yunx-desktop")
+        ?: if (isMac()) {
+            File(System.getProperty("user.home"), "Library/Application Support/YunX-Desktop")
+        } else {
+            File(System.getProperty("user.home"), ".yunx-desktop")
+        }
 
     /** 旧版数据根目录（.yunx-pc）：首次启动时整体迁移到新目录 */
     private val legacyDataDir: File = File(System.getProperty("user.home"), ".yunx-pc")
@@ -153,6 +158,9 @@ object AppContext {
     /** 两个 File 是否指向同一位置（canonicalPath 取不到时退回绝对路径比较） */
     private fun sameDir(a: File, b: File): Boolean =
         runCatching { a.canonicalPath == b.canonicalPath }.getOrDefault(a.absolutePath == b.absolutePath)
+
+    private fun isMac(): Boolean =
+        System.getProperty("os.name", "").lowercase().let { it.contains("mac") || it.contains("darwin") }
 
     /** 读取配置的目录；未配置或目录不可用（被删/无权限）时回退默认值，绝不让应用起不来 */
     private fun resolveConfiguredDir(key: String, defaultDir: File): File {
