@@ -16,7 +16,7 @@ import java.util.zip.ZipEntry
 import java.util.zip.ZipOutputStream
 
 /**
- * 诊断日志（设置 → 关于云析 → 长按 → 开发调试 → 诊断模式）。
+ * 诊断日志（设置 → 关于 YunX-OS → 长按 → 开发调试 → 诊断模式）。
  *
  * 与 [LogExporter] 的区别：那边导的是**运行日志文件**（`Log` 写的单文件、混在一起、无模块区分），
  * 这边是**按模块分文件**写的详细日志，落在数据目录里、跨重启保留，专门用来复现疑难问题。

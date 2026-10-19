@@ -22,7 +22,7 @@ object LogExporter {
         if (!dir.exists()) dir.mkdirs()
         val target = File(dir, "yunx_log_${timestamp()}.txt")
         val header = buildString {
-            appendLine("云析 YunX-Desktop 运行日志")
+            appendLine("YunX-OS 运行日志")
             appendLine("时间: ${SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault()).format(Date())}")
             appendLine("系统: ${System.getProperty("os.name")} ${System.getProperty("os.version")}")
             appendLine("Java: ${System.getProperty("java.version")}")
@@ -46,7 +46,7 @@ object LogExporter {
         if (!dir.exists()) dir.mkdirs()
         val target = File(dir, "yunx_log_${timestamp()}.txt")
         val logFile = File(AppContext.filesDir, "yunx-desktop.log")
-        val header = "云析 YunX-Desktop 日志导出 ${SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault()).format(Date())}\n"
+        val header = "YunX-OS 日志导出 ${SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault()).format(Date())}\n"
         FileOutputStream(target).use { out ->
             out.write(header.toByteArray(Charsets.UTF_8))
             if (logFile.exists()) {

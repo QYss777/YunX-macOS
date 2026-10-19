@@ -75,7 +75,7 @@ class DownloadViewModel(private val manager: DownloadManager) : ViewModel() {
         tasks.value.toList().forEach { manager.remove(it.id, deleteLocal) }
     }
 
-    // ---------- 下载调试（设置 → 关于云析 → 长按 → 开发调试 → 下载调试）----------
+    // ---------- 下载调试（设置 → 关于 YunX-OS → 长按 → 开发调试 → 下载调试）----------
 
     /** 某任务当前每个在飞分片（= 每个线程正在干什么），调试页每秒拉一次 */
     fun chunkDebugSnapshot(taskId: Long) = manager.chunkDebugSnapshot(taskId)

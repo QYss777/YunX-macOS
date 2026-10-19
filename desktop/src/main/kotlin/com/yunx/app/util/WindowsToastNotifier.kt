@@ -145,7 +145,7 @@ object WindowsToastNotifier {
         val completed = lastTotalSum > 0 && lastDoneSum >= lastTotalSum
         lastDoneSum = 0; lastTotalSum = 0
         if (completed) {
-            sendLine("done|${esc("云析 · 下载完成")}|${esc("全部任务已下载完毕")}")
+            sendLine("done|${esc("YunX-OS · 下载完成")}|${esc("全部任务已下载完毕")}")
             closeQuietly()
         } else {
             sendLine("exit")
@@ -170,12 +170,12 @@ object WindowsToastNotifier {
         proc = null
     }
 
-    /** 通知显示名「云析」+ 图标（存在 exe 旁的 ico 时） */
+    /** 通知显示名「YunX-OS」+ 图标（存在 exe 旁的 ico 时） */
     private fun registerAumid() {
         try {
             val key = "Software\\Classes\\AppUserModelId\\$AUMID"
             Advapi32Util.registryCreateKey(WinReg.HKEY_CURRENT_USER, key)
-            Advapi32Util.registrySetStringValue(WinReg.HKEY_CURRENT_USER, key, "DisplayName", "云析")
+            Advapi32Util.registrySetStringValue(WinReg.HKEY_CURRENT_USER, key, "DisplayName", "YunX-OS")
             iconFile()?.toURI()?.toString()?.let {
                 Advapi32Util.registrySetStringValue(WinReg.HKEY_CURRENT_USER, key, "IconUri", it)
             }

@@ -299,7 +299,7 @@ object GitHubMarkdownImageTransformer : ImageTransformer {
                 semaphore.withPermit {
                     val request = Request.Builder()
                         .url(candidate)
-                        .header("User-Agent", "YunX-Desktop")
+                        .header("User-Agent", "YunX-OS")
                         .build()
                     client.newCall(request).execute().use { resp ->
                         if (!resp.isSuccessful) return@withPermit null

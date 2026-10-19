@@ -101,7 +101,7 @@ object RemoteImageLoader {
                 semaphore.withPermit {
                     val req = Request.Builder()
                         .url(candidate)
-                        .header("User-Agent", "YunX-Desktop")
+                        .header("User-Agent", "YunX-OS")
                         .build()
                     client.newCall(req).execute().use { resp ->
                         if (!resp.isSuccessful) return@withPermit null

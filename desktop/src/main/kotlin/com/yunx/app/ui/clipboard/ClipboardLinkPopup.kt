@@ -176,7 +176,7 @@ fun ClipboardLinkPopup() {
         visible = true,
         resizable = false,
         focusable = false,
-        title = "云析",
+        title = "YunX-OS",
         state = rememberWindowState(
             size = DpSize(400.dp, 132.dp),
             position = WindowPosition(Alignment.BottomEnd)

@@ -10,7 +10,7 @@ import java.util.prefs.Preferences
  *
  * 目录分三层（自 2026-10-11 起后两层可在「设置 → 储存目录」里改，改完需重启生效）：
  * 1. [dataDir] 数据根目录：Windows 默认 `<用户目录>/.yunx-desktop`，macOS 默认
- *    `~/Library/Application Support/YunX-Desktop`，可用环境变量 `YUNX_DESKTOP_DATA_DIR` 覆盖；
+ *    `~/Library/Application Support/YunX-OS`，可用环境变量 `YUNX_DESKTOP_DATA_DIR` 覆盖；
  *    日志（[filesDir]）与诊断日志目录跟随它，**不可在应用内更改**。
  * 2. [dbDir] 数据库目录：默认＝[dataDir]，放 `yunx.db` 与 `credential.key`（两者必须同处一地）。
  * 3. [cacheDir] 缓存根目录：默认＝`<dataDir>/cache`，放下载分片、合并临时文件、JCEF 浏览器数据。
@@ -23,13 +23,16 @@ object AppContext {
     /** 应用数据根目录；可用环境变量 YUNX_DESKTOP_DATA_DIR 覆盖（测试/沙箱环境用） */
     val dataDir: File = System.getenv("YUNX_DESKTOP_DATA_DIR")?.let { File(it) }
         ?: if (isMac()) {
-            File(System.getProperty("user.home"), "Library/Application Support/YunX-Desktop")
+            File(System.getProperty("user.home"), "Library/Application Support/YunX-OS")
         } else {
             File(System.getProperty("user.home"), ".yunx-desktop")
         }
 
-    /** 旧版数据根目录（.yunx-pc）：首次启动时整体迁移到新目录 */
-    private val legacyDataDir: File = File(System.getProperty("user.home"), ".yunx-pc")
+    /** 旧版数据根目录：首次启动时整体迁移到新目录，保留登录态与下载任务。 */
+    private val legacyDataDirs: List<File> = buildList {
+        if (isMac()) add(File(System.getProperty("user.home"), "Library/Application Support/YunX-Desktop"))
+        add(File(System.getProperty("user.home"), ".yunx-pc"))
+    }
 
     // ---------- 杂项偏好（必须在下面解析目录之前声明：Kotlin 单例按声明顺序初始化）----------
 
@@ -89,13 +92,14 @@ object AppContext {
     fun appCacheDirPreset(): File = File(appRootDir, "data/cache")
 
     /**
-     * 旧数据目录迁移：<用户目录>/.yunx-pc → .yunx-desktop。
+     * 旧数据目录迁移：旧版 macOS 的 YunX-Desktop 或 Windows 的 .yunx-pc → 当前目录。
      * 仅在新目录不存在、且未用环境变量覆盖时执行；整体改名（不复制，下载分片可能很大），
      * 改名失败则退回使用新建的空目录（登录态与任务需重新登录/重新添加）。
      */
     private fun migrateLegacyDataDir() {
         if (System.getenv("YUNX_DESKTOP_DATA_DIR") != null) return
-        if (dataDir.exists() || !legacyDataDir.exists()) return
+        if (dataDir.exists()) return
+        val legacyDataDir = legacyDataDirs.firstOrNull { it.exists() } ?: return
         if (!legacyDataDir.renameTo(dataDir)) {
             Log.w("YunX-DataDir", "旧数据目录迁移失败：${legacyDataDir.absolutePath}")
             return

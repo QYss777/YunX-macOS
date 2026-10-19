@@ -1,27 +1,27 @@
 <div align="center">
 
-<img src="desktop/src/main/resources/icon.png" width="120" alt="云析 YunX-Desktop" />
+<img src="desktop/src/main/resources/icon.png" width="120" alt="YunX-OS" />
 
-# 云析桌面版 · YunX-Desktop
+# YunX-OS
 
-**粘贴分享链接，直接高速下载 —— 云析 YunX 的 macOS 桌面版**
+**粘贴分享链接，直接高速下载 —— YunX-OS macOS 桌面版**
 
 识别夸克 / UC / 迅雷 / 百度 / 139 / 123 分享链接，自动匹配提取码，Range 分片并发 + 断点续传。
 
-[![Release](https://img.shields.io/github/v/release/liuyinkang0115-debug/YunX-macOS?style=flat-square\&label=release\&color=4C8BF5)](https://github.com/liuyinkang0115-debug/YunX-macOS/releases/latest)
-[![Stars](https://img.shields.io/github/stars/liuyinkang0115-debug/YunX-macOS?style=flat-square\&logo=github\&color=4C8BF5)](https://github.com/liuyinkang0115-debug/YunX-macOS/stargazers)
+[![Release](https://img.shields.io/github/v/release/QYss777/YunX-macOS?style=flat-square\&label=release\&color=4C8BF5)](https://github.com/QYss777/YunX-macOS/releases/latest)
+[![Stars](https://img.shields.io/github/stars/QYss777/YunX-macOS?style=flat-square\&logo=github\&color=4C8BF5)](https://github.com/QYss777/YunX-macOS/stargazers)
 [![License](https://img.shields.io/badge/license-AGPL--3.0-blue?style=flat-square)](./LICENSE)
 [![Platform](https://img.shields.io/badge/platform-macOS-000000?style=flat-square\&logo=apple\&logoColor=white)](#构建)
 [![Kotlin](https://img.shields.io/badge/Kotlin-7F52FF?style=flat-square\&logo=kotlin\&logoColor=white)](https://kotlinlang.org/)
 [![Compose](https://img.shields.io/badge/Compose%20Multiplatform-Desktop-4285F4?style=flat-square\&logo=jetpackcompose\&logoColor=white)](https://www.jetbrains.com/lp/compose-multiplatform/)
 
-[下载最新版](https://github.com/liuyinkang0115-debug/YunX-macOS/releases/latest) · [功能](docs/FEATURES.md) · [使用](docs/USAGE.md) · [构建](docs/BUILD.md) · [常见问题](#常见问题) · [与上游差异](docs/UPSTREAM-DIFF.md)
+[下载最新版](https://github.com/QYss777/YunX-macOS/releases/latest) · [功能](docs/FEATURES.md) · [使用](docs/USAGE.md) · [构建](docs/BUILD.md) · [常见问题](#常见问题) · [与上游差异](docs/UPSTREAM-DIFF.md)
 
 </div>
 
 ***
 
-> **云析永远免费开源。** 如果你是在任何地方「花钱买到」的，说明你被骗了，请立即退款。
+> **YunX-OS 永远免费开源。** 如果你是在任何地方「花钱买到」的，说明你被骗了，请立即退款。
 > 任何收费版本均为二次打包的诈骗版本，与本项目无关。
 
 > **本项目使用 AGPL-3.0 开源协议。** 基于上游 [CYQawa/YunX](https://github.com/CYQawa/YunX)（Android）移植，
@@ -29,7 +29,7 @@
 
 ## 简介
 
-云析 YunX 的 **macOS 桌面版**：粘贴网盘分享链接，浏览分享内容并直接高速下载文件，全程在 Mac 上完成。
+YunX-OS 的 **macOS 桌面版**：粘贴网盘分享链接，浏览分享内容并直接高速下载文件，全程在 Mac 上完成。
 提供 **DMG 安装包** 与 **ZIP 压缩包** 两种分发形式，支持 Apple Silicon 与 Intel Mac。
 
 ## 截图
@@ -113,7 +113,7 @@
 Gradle 可由系统安装，首次构建会自动下载项目依赖。
 
 ```bash
-git clone https://github.com/liuyinkang0115-debug/YunX-macOS.git
+git clone https://github.com/QYss777/YunX-macOS.git
 cd YunX-macOS
 
 gradle :desktop:run        # 编译并启动开发版
@@ -136,7 +136,7 @@ gradle :desktop:packagePkg # 生成 PKG 安装包
 <details>
 <summary><b>DMG 和 ZIP 有什么区别？</b></summary>
 
-DMG 双击后将应用拖入「应用程序」目录；ZIP 解压后可直接运行 `YunX-Desktop.app`。
+DMG 双击后将应用拖入「应用程序」目录；ZIP 解压后可直接运行 `YunX-OS.app`。
 两者功能一致，ZIP 适合便携使用。
 
 </details>
@@ -150,7 +150,7 @@ DMG 双击后将应用拖入「应用程序」目录；ZIP 解压后可直接运
 
 ## 支持开发
 
-- **GitHub Star**：给 [liuyinkang0115-debug/YunX-macOS](https://github.com/liuyinkang0115-debug/YunX-macOS) 点个 Star
+- **GitHub Star**：给 [QYss777/YunX-macOS](https://github.com/QYss777/YunX-macOS) 点个 Star
 
 - **提交 Issues**：发现 Bug 或有功能建议欢迎反馈
 
@@ -176,16 +176,16 @@ DMG 双击后将应用拖入「应用程序」目录；ZIP 解压后可直接运
 
 - 原安卓项目仓库：<https://github.com/CYQawa/YunX>
 
-- PC 移植版仓库：<https://github.com/tidain/YunX-Desktop>
+- macOS 版仓库：<https://github.com/QYss777/YunX-macOS>
 
-- 问题与建议：<https://github.com/liuyinkang0115-debug/YunX-macOS/issues>
+- 问题与建议：<https://github.com/QYss777/YunX-macOS/issues>
 
 ## Star History
 
-<a href="https://www.star-history.com/?repos=liuyinkang0115-debug%2FYunX-macOS&type=date&legend=top-left">
+<a href="https://www.star-history.com/?repos=QYss777%2FYunX-macOS&type=date&legend=top-left">
  <picture>
-   <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/chart?repos=liuyinkang0115-debug/YunX-macOS&type=date&theme=dark&legend=top-left" />
-   <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/chart?repos=liuyinkang0115-debug/YunX-macOS&type=date&legend=top-left" />
-   <img alt="Star History Chart" src="https://api.star-history.com/chart?repos=liuyinkang0115-debug/YunX-macOS&type=date&legend=top-left" />
+   <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/chart?repos=QYss777/YunX-macOS&type=date&theme=dark&legend=top-left" />
+   <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/chart?repos=QYss777/YunX-macOS&type=date&legend=top-left" />
+   <img alt="Star History Chart" src="https://api.star-history.com/chart?repos=QYss777/YunX-macOS&type=date&legend=top-left" />
  </picture>
 </a>

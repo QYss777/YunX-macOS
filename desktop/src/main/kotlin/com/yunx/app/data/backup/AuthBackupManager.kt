@@ -207,7 +207,7 @@ class AuthBackupManager(
     suspend fun importJson(json: String): Int = withContext(Dispatchers.IO) {
         val root = JSONObject(json)
         if (root.optString("app") != APP_TAG) {
-            throw IllegalArgumentException("不是有效的云析认证备份文件")
+            throw IllegalArgumentException("不是有效的 YunX-OS 认证备份文件")
         }
         val accounts = root.optJSONArray("accounts") ?: return@withContext 0
         var count = 0

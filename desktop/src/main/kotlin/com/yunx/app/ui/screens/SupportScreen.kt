@@ -260,7 +260,7 @@ fun SupportScreen(
                     )
                     Spacer(modifier = Modifier.width(10.dp))
                     Text(
-                        text = "云析完全免费开源，所有功能无需捐赠即可正常使用。" +
+                        text = "YunX-OS 完全免费开源，所有功能无需捐赠即可正常使用。" +
                             "如果你觉得它帮到了你，愿意的话可以扫码表达一下心意，" +
                             "你的支持会成为持续维护与更新的动力～",
                         style = MaterialTheme.typography.bodyMedium,
@@ -303,7 +303,7 @@ fun SupportScreen(
             // ---------- PC 移植版仓库入口 ----------
             OutlinedButton(
                 onClick = {
-                    DesktopActions.openUrl("https://github.com/tidain/YunX-Desktop")
+                    DesktopActions.openUrl("https://github.com/QYss777/YunX-macOS")
                     SnackbarController.show("已打开 PC 移植版仓库")
                 },
                 modifier = Modifier

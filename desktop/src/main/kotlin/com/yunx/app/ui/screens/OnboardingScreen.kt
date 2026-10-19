@@ -272,7 +272,7 @@ private fun WelcomePage() {
         // 应用图标：圆角 + 投影，形成"浮在 blob 上"的观感
         Image(
             painter = painterResource("about_icon.png"),
-            contentDescription = "云析图标",
+            contentDescription = "YunX-OS 图标",
             modifier = Modifier
                 .size(120.dp)
                 .shadow(elevation = 10.dp, shape = RoundedCornerShape(28.dp))
@@ -280,14 +280,14 @@ private fun WelcomePage() {
 
         Spacer(modifier = Modifier.height(26.dp))
         Text(
-            text = "云析",
+            text = "YunX-OS",
             style = MaterialTheme.typography.headlineLarge,
             fontWeight = FontWeight.SemiBold,
             color = MaterialTheme.colorScheme.onSurface
         )
         Spacer(modifier = Modifier.height(6.dp))
         Text(
-            text = "YunX-Desktop · v$APP_VERSION",
+            text = "YunX-OS · v$APP_VERSION",
             style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.onSurfaceVariant
         )
@@ -335,7 +335,7 @@ private fun FactChip(text: String) {
 private fun GitHubCard() {
     Card(
         onClick = {
-            DesktopActions.openUrl("https://github.com/tidain/YunX-Desktop")
+            DesktopActions.openUrl("https://github.com/QYss777/YunX-macOS")
         },
         modifier = Modifier.fillMaxWidth(),
         shape = MaterialTheme.shapes.large,
@@ -370,7 +370,7 @@ private fun GitHubCard() {
                     color = MaterialTheme.colorScheme.onSurface
                 )
                 Text(
-                    text = "github.com/tidain/YunX-Desktop",
+                    text = "github.com/QYss777/YunX-macOS",
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
@@ -580,7 +580,7 @@ private fun TermsPage() {
         )
         Spacer(modifier = Modifier.height(4.dp))
         Text(
-            text = "云析是开源工具，以下是使用条款与免责说明",
+            text = "YunX-OS 是开源工具，以下是使用条款与免责说明",
             style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.onSurfaceVariant
         )
@@ -612,7 +612,7 @@ private fun TermsPage() {
             icon = Icons.Outlined.Code,
             title = "开源协议",
             paragraphs = listOf(
-                "本项目基于 GNU AGPL-3.0 协议开源，源码公开于 github.com/tidain/YunX-Desktop。"
+                "本项目基于 GNU AGPL-3.0 协议开源，源码公开于 github.com/QYss777/YunX-macOS。"
             )
         )
 

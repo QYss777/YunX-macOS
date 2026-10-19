@@ -46,7 +46,7 @@ object TrayManager {
             popup.addSeparator()
             popup.add(MenuItem("退出").also { it.addActionListener { onExit() } })
         }
-        val icon = TrayIcon(image.getScaledInstance(16, 16, Image.SCALE_SMOOTH), "云析 YunX-Desktop").apply {
+        val icon = TrayIcon(image.getScaledInstance(16, 16, Image.SCALE_SMOOTH), "YunX-OS").apply {
             isImageAutoSize = true
             // Windows 使用 Win32 菜单桥接；macOS/Linux 使用 AWT 原生托盘菜单。
             popupMenu = popup

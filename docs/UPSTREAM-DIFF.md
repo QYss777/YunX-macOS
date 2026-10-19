@@ -1,7 +1,7 @@
 # 与上游的差异（macOS 桌面版 vs Android 版）
 
 - 上游（Android）：[CYQawa/YunX](https://github.com/CYQawa/YunX)
-- 本仓库（macOS 桌面移植）：[liuyinkang0115-debug/YunX-macOS](https://github.com/liuyinkang0115-debug/YunX-macOS)
+- 本仓库（macOS 桌面移植）：[QYss777/YunX-macOS](https://github.com/QYss777/YunX-macOS)
 
 **沿用上游的部分**：网盘分享链接的解析协议、下载引擎（Range 分片并发、弹性区按字节顺序分配、
 断点续传、失败重试、全局限速）、界面框架与主题体系（Compose + Material 3、深色模式 + 种子色）、
@@ -65,7 +65,7 @@
 | 数据库 | Room | 纯 JDBC（`sqlite-jdbc`）直连 SQLite |
 | 设置存储 | SharedPreferences | `java.util.prefs`，由 macOS 的 Java Preferences 存储 |
 | 文件存储 | SAF / tree Uri | 普通文件路径（下载目录等） |
-| 数据目录 | 应用私有目录 | `~/Library/Application Support/YunX-Desktop/`：`yunx.db`、`credential.key`、`cache/download_tmp`、`files/yunx-desktop.log` |
+| 数据目录 | 应用私有目录 | `~/Library/Application Support/YunX-OS/`：`yunx.db`、`credential.key`、`cache/download_tmp`、`files/yunx-desktop.log` |
 | 认证备份 | 有 | 同思路：PBKDF2 派生密钥 + AES-GCM 加密 Cookie / JWT，导出 `.yunx` 备份文件，可跨设备恢复 |
 | README / 更新说明图片渲染 | Android `BitmapFactory` 解码（`inSampleSize` 降采样） | GFM Markdown 渲染，图片改用 Skia（skiko）解码，无降采样 |
 
@@ -169,7 +169,7 @@
 
 | 上游提交 | 内容 | 桌面实现与取舍 |
 | --- | --- | --- |
-| `989a6d7`(#142) | 应用内公告系统（远程列表 / 启动弹窗 / 未读角标） | **数据层**：`data/announcement/AnnouncementApi`（列表 / 详情两接口；成功与否看响应体 `success`；不轮询；详情按 id 缓存）、`AnnouncementReadStore`（已读口径完全本地维护，打开详情 / 关弹窗都算已读）、`AnnouncementTime`（ISO 8601 → 本地时间，逐行一致）。**桌面适配**：日志 `android.util.Log` → 项目自带 `Log`；`SharedPreferences` → `java.util.prefs`（节点 `yunx/announcement`，仍存 JSON 数组、最多 500 条）；`User-Agent` 改 `YunX-Desktop`；按 `API-PC.md` **每个请求携带 `X-Client-Platform: desktop`**（服务端据此只返回「发电脑端」的公告；缺省 / 未知值一律回落手机端，会静默拿到手机端公告）；上游 `network_security_config.xml` 的明文放行在桌面 JVM 下不需要（去掉了对应注释与依赖）。**ViewModel**：`AnnouncementViewModel`（列表唯一真源 / 详情会话内缓存 / 未读数 / 启动弹窗候选口径与上游一致）；`Factory` 适配桌面 lifecycle 的 `create(KClass, CreationExtras)` 签名；`SnackbarController` 与上游同名同语义。**图片**：新增 `RemoteImageLoader`（Skia `Image.makeFromEncoded` 解码 + 128 张 LRU + `Semaphore(4)` + 进行中去重 + GitHub 镜像；SVG 直接跳过，与上游 BitmapFactory 取舍一致）与 `RemoteImage`（`ImageBitmap` 版，`autoHeight` 自算宽高比占位；底框宽度收窄到实际绘制宽度、缩小后靠左；弹窗封面与详情图片均设高度上限），以及全窗口看图组件 `ImageViewerOverlay`（详情页封面 / 正文图集单击放大；滚轮以鼠标为锚点缩放、拖拽平移、双击复位、Esc 或单击图片外关闭）。正文图集多图时按统一行高等高横向排布、放不下自动换行（`FlowRow` + `RemoteImage.fixedHeight`），单图沿用自适应高度。**UI**：`AnnouncementScreen`（列表 ↔ 详情，`AnimatedContent` 淡入淡出）、`AnnouncementListPage`（首屏 / 错误 / 空态；刷新走顶栏按钮）、`AnnouncementDetailPage`（正文复用 GFM 渲染器 + 自研 `GitHubMarkdownImageTransformer`）、`AnnouncementPopupDialog`（**窗口内 `FadeAlertDialog`**，非 material3 AlertDialog）、`AnnouncementUnreadBadge`。**MainScreen**：顶栏 `Campaign` 图标（所有 Tab 可见）+ 未读角标（画在 `IconButton` 外层 48dp Box，避免被 IconButton 的圆形裁剪切掉）+ 公告覆盖页 + 启动弹窗。 |
+| `989a6d7`(#142) | 应用内公告系统（远程列表 / 启动弹窗 / 未读角标） | **数据层**：`data/announcement/AnnouncementApi`（列表 / 详情两接口；成功与否看响应体 `success`；不轮询；详情按 id 缓存）、`AnnouncementReadStore`（已读口径完全本地维护，打开详情 / 关弹窗都算已读）、`AnnouncementTime`（ISO 8601 → 本地时间，逐行一致）。**桌面适配**：日志 `android.util.Log` → 项目自带 `Log`；`SharedPreferences` → `java.util.prefs`（节点 `yunx/announcement`，仍存 JSON 数组、最多 500 条）；`User-Agent` 改为桌面客户端标识；按 `API-PC.md` **每个请求携带 `X-Client-Platform: desktop`**（服务端据此只返回「发电脑端」的公告；缺省 / 未知值一律回落手机端，会静默拿到手机端公告）；上游 `network_security_config.xml` 的明文放行在桌面 JVM 下不需要（去掉了对应注释与依赖）。**ViewModel**：`AnnouncementViewModel`（列表唯一真源 / 详情会话内缓存 / 未读数 / 启动弹窗候选口径与上游一致）；`Factory` 适配桌面 lifecycle 的 `create(KClass, CreationExtras)` 签名；`SnackbarController` 与上游同名同语义。**图片**：新增 `RemoteImageLoader`（Skia `Image.makeFromEncoded` 解码 + 128 张 LRU + `Semaphore(4)` + 进行中去重 + GitHub 镜像；SVG 直接跳过，与上游 BitmapFactory 取舍一致）与 `RemoteImage`（`ImageBitmap` 版，`autoHeight` 自算宽高比占位；底框宽度收窄到实际绘制宽度、缩小后靠左；弹窗封面与详情图片均设高度上限），以及全窗口看图组件 `ImageViewerOverlay`（详情页封面 / 正文图集单击放大；滚轮以鼠标为锚点缩放、拖拽平移、双击复位、Esc 或单击图片外关闭）。正文图集多图时按统一行高等高横向排布、放不下自动换行（`FlowRow` + `RemoteImage.fixedHeight`），单图沿用自适应高度。**UI**：`AnnouncementScreen`（列表 ↔ 详情，`AnimatedContent` 淡入淡出）、`AnnouncementListPage`（首屏 / 错误 / 空态；刷新走顶栏按钮）、`AnnouncementDetailPage`（正文复用 GFM 渲染器 + 自研 `GitHubMarkdownImageTransformer`）、`AnnouncementPopupDialog`（**窗口内 `FadeAlertDialog`**，非 material3 AlertDialog）、`AnnouncementUnreadBadge`。**MainScreen**：顶栏 `Campaign` 图标（所有 Tab 可见）+ 未读角标（画在 `IconButton` 外层 48dp Box，避免被 IconButton 的圆形裁剪切掉）+ 公告覆盖页 + 启动弹窗。 |
 | `989a6d7`(#142) 桌面取舍 | 共享元素过渡 / 下拉刷新 | **未移植共享元素**：上游用 `SharedTransitionLayout` + `sharedBounds` 做「列表项长成整页 / 图标长成整页」；桌面 `MainScreen` 没有共享元素基础设施（全部叠加页统一 `AnimatedVisibility` 淡入淡出），本页随全站约定改用 `AnimatedContent` 淡入淡出，不额外引入共享元素作用域。**未移植下拉刷新**：桌面无该交互，刷新改为顶栏按钮（`PullToRefreshBox` 亦为 AndroidX 依赖）。**图片缓存不共用**：上游把 Markdown 内嵌图与普通图片合到同一个 `RemoteImageLoader`；桌面 `GitHubMarkdownImageTransformer` 另有 SVG 光栅化 / `<text>` 补绘 / HTML 尺寸标记等渲染器适配，拆分会牵动既有 README 渲染链路，故二者各自持 LRU（同图跨场景重复加载极少）。 |
 
 #### 跳过
@@ -314,7 +314,7 @@
 | `AppDatabase` 库信息埋点 | 上游用 Room `Callback(onCreate/onOpen)`；桌面是 sqlite-jdbc，改为库打开成功时调 `logSchema(conn)`：查 `sqlite_master` 列业务表 + 每张表 `COUNT(*)`（只在诊断模式开启时跑，且只在开库那一次） |
 | `DownloadManager` 埋点 | 全部对齐：`task_enqueue` / `task_size_probed` / `chunk_plan` / `task_retry` / `task_stream_fallback` / `merge_start` / `merge_progress`（**按 10% 采样**，合并回调太密）/ `task_complete` / `engine_task_created` / `task_queued`（仅在状态真变化时记）/ `engine_task_failed` / `engine_task_complete`；`dao.insert/complete/delete` 走 `DiagnosticLog.dbOp` 自动记耗时与影响行数；`pause` / `remove` 记 operation 模块 |
 | `LogExporter.exportDiagnosticZip` | 桌面版同签名（无 Context）：转发到 `DiagnosticLog.exportZip()`，先 flush 再压，zip 落 `<dataDir>/cache/logs/` |
-| 设置页入口 | 与上游一致放在「关于云析」长按 → 开发调试菜单里：**诊断模式开关 + 导出诊断日志（zip）**；另外「导出日志」弹窗在诊断模式开启时也多一个 zip 入口 |
+| 设置页入口 | 与上游一致放在「关于 YunX-OS」长按 → 开发调试菜单里：**诊断模式开关 + 导出诊断日志（zip）**；另外「导出日志」弹窗在诊断模式开启时也多一个 zip 入口 |
 | 冷启动装配 | 上游在 `YunXApp.onCreate`；桌面在 `Main.kt` 的 `AppContext.init()` 之后调 `DiagnosticLog.install()`（用 `runCatching` 包住，绝不影响启动） |
 
 #### 跳过 / 桌面差异
@@ -339,7 +339,7 @@
 | 中文口令解析（星海，夸克/UC）（#163） | 新增 `StarSeaConstants.kt` + `StarSeaApi.kt`（纯 OkHttp + org.json，直译；`android.util.Log` → 桌面 `Log`）。`ResolveViewModel.startResolve` 的兜底链路改为**先迅雷、迅雷没给出可用链接再问星海**，两个服务都失败时把更靠后那次的原因带出去（不再只丢一句「无法识别分享链接」）；`StarSeaApiTest` 同步移植 |
 | 分片级 SHA-256 校验（#163） | `ChunkDownloader`：新增 `ByteArray.toHexDigest()`、`downloadChunk(contentDigest)`、`mergeChunksToStream(onPartDigest)`（写入时增量喂摘要，合并时逐片重算比对，不符即拒绝保存损坏文件，**零额外读盘**）。`DownloadManager`：新增 `taskPartDigests` / `newPartDigest`（把断点续传已有前缀预先喂好），主池 / 弹性区 / 重试三条路径都登记摘要，`finishDownload` 校验不过就 abort |
 | 全量 SHA-256（可选开关）（#163） | 合并那一遍用 `DigestOutputStream` 顺带算，写进调试日志的「全量校验」事件；**只在「下载调试」开启时才算**（摘要没有别的去处），设置项 `fullFileSha256` 默认关 |
-| 下载调试（按任务事件流 + 调试页）（#163） | 新增 `DownloadDebugLog`（内存态、关闭即清空、单任务 2000 条 / 最多 50 个任务）与 `DownloadDebugScreen`；`DownloadManager` 埋点全覆盖（入队 / 拦截失败 / 断点失效 / 分片规划 / 抢占慢连接 / 抢占结果 / 网络变化 / 开始合并 / 分片校验 / 全量校验 / 校验失败 / 合并失败 / 清理临时文件 / 完成 / 失败 / 暂停 / 删除 / 引擎任务创建），并暴露 `chunkDebugSnapshot` / `resourceDebugSnapshot` / `forcePreemptChunk` 三个拉取式查询。入口：设置 → 关于云析 → 长按 → 开发调试 → **下载调试**（关闭有二次确认，关闭即清空日志）；下载页**右键任务 → 调试信息** |
+| 下载调试（按任务事件流 + 调试页）（#163） | 新增 `DownloadDebugLog`（内存态、关闭即清空、单任务 2000 条 / 最多 50 个任务）与 `DownloadDebugScreen`；`DownloadManager` 埋点全覆盖（入队 / 拦截失败 / 断点失效 / 分片规划 / 抢占慢连接 / 抢占结果 / 网络变化 / 开始合并 / 分片校验 / 全量校验 / 校验失败 / 合并失败 / 清理临时文件 / 完成 / 失败 / 暂停 / 删除 / 引擎任务创建），并暴露 `chunkDebugSnapshot` / `resourceDebugSnapshot` / `forcePreemptChunk` 三个拉取式查询。入口：设置 → 关于 YunX-OS → 长按 → 开发调试 → **下载调试**（关闭有二次确认，关闭即清空日志）；下载页**右键任务 → 调试信息** |
 | Material 3 设计审查修复（#164，适用部分） | ① `SnackbarController` 换成上游的**事件队列 + 宿主优先**实现（修复多宿主并存时第二条提示被吞/重复显示）；② `Type.kt` 对齐 M3 刻度（headlineMedium 22→28、titleLarge 18→22、bodyLarge 15→16、bodyMedium 13→14…）；③ 新增 `ui/theme/ColorContrast.kt` 的 `readableSeedForeground`，主题页色圆上的对勾/Palette 图标由硬编码白色改为**按种子色亮度选黑/白**（浅色种子上原来的白图标几乎看不见）；④ `ResolveScreen` 的 GitHub 徽章由硬编码绿/橙/灰改为主题容器色（深色模式下对比度）；⑤ `DownloadScreen` 两处进度条去掉强制的 `height + clip`，交回 M3 默认尺寸；⑥ `ThemeScreen` 颜色选择器：HEX 输入只接受合法十六进制字符（旧实现 `isLetterOrDigit` 会放进 G-Z，凑满 6 位却解析失败）、`singleLine = true`、弹层加 `verticalScroll`；⑦ `MultiSelectBar` 新增 `busy` 参数（`count == 0 \|\| busy` 时禁用点击并置灰），10 个云盘页传入 `viewModel.isOperating` |
 
 #### 跳过 / 桌面差异

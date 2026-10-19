@@ -41,7 +41,7 @@ object GopeedKernelProvisioner {
     /** 内核包并行下载连接数（Range 分片并发）；服务器不支持 Range 时自动回退单连接流式下载 */
     private const val KERNEL_CONNECTIONS = 32
 
-    private const val UA = "YunX-Desktop"
+    private const val UA = "YunX-OS"
 
     /** 内核包落地的临时目录 `<dataDir>/gopeed/kernel` */
     private fun tempDir(): File = File(GopeedEngine.engineDir(), "kernel")
@@ -129,7 +129,7 @@ object GopeedKernelProvisioner {
         val req = Request.Builder()
             .url(RELEASES_LATEST_URL)
             .header("Accept", "application/vnd.github+json")
-            .header("User-Agent", "YunX-Desktop")
+            .header("User-Agent", "YunX-OS")
             .build()
         return HttpClients.apiClient().newCall(req).execute().use { resp ->
             val text = resp.body?.string().orEmpty()

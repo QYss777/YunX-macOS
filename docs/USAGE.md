@@ -46,14 +46,14 @@ GitHub 为代码托管平台，链接（仓库 / 账号 / 文件直链）在「�
 
 | 路径 | 内容 |
 | --- | --- |
-| `~/Library/Application Support/YunX-Desktop/` | 应用数据根目录（可用环境变量 `YUNX_DESKTOP_DATA_DIR` 覆盖） |
-| `~/Library/Application Support/YunX-Desktop/yunx.db` | 任务与凭证库（SQLite；位置可在「设置 → 储存目录」改） |
-| `~/Library/Application Support/YunX-Desktop/credential.key` | 凭证加密密钥（AES-256-GCM；跟着数据库目录走） |
-| `~/Library/Application Support/YunX-Desktop/cache/download_tmp/` | 下载分片临时目录（缓存目录可在「设置 → 储存目录」改） |
-| `~/Library/Application Support/YunX-Desktop/files/yunx-desktop.log` | 运行日志（设置页可导出） |
+| `~/Library/Application Support/YunX-OS/` | 应用数据根目录（可用环境变量 `YUNX_DESKTOP_DATA_DIR` 覆盖） |
+| `~/Library/Application Support/YunX-OS/yunx.db` | 任务与凭证库（SQLite；位置可在「设置 → 储存目录」改） |
+| `~/Library/Application Support/YunX-OS/credential.key` | 凭证加密密钥（AES-256-GCM；跟着数据库目录走） |
+| `~/Library/Application Support/YunX-OS/cache/download_tmp/` | 下载分片临时目录（缓存目录可在「设置 → 储存目录」改） |
+| `~/Library/Application Support/YunX-OS/files/yunx-desktop.log` | 运行日志（设置页可导出） |
 | macOS `java.util.prefs` | 偏好设置 |
 
-> 旧版本使用的 `.yunx-pc` 数据目录会在首次启动时**自动整体迁移**为 `YunX-Desktop`
+> 旧版本使用的 `YunX-Desktop` 或 `.yunx-pc` 数据目录会在首次启动时**自动整体迁移**为 `YunX-OS`
 > （登录态、下载任务、分片一并保留），无需手动处理。
 
 ### 储存目录（设置 → 储存目录）

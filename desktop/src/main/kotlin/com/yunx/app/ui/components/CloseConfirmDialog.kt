@@ -62,7 +62,7 @@ fun CloseConfirmDialog(
     FadeAlertDialog(
         visible = visible,
         onDismissRequest = { onDismiss(CloseChoice.CANCEL, false) },
-        title = { Text("关闭云析") },
+        title = { Text("关闭 YunX-OS") },
         text = {
             Column {
                 Text(

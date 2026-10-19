@@ -334,7 +334,7 @@ fun MainScreen(
     val minimizeToTray: () -> Unit = {
         // 委托给 Main.kt 的实现（含关闭请求抑制，避免 hide 触发 onCloseRequest 重跑）
         onMinimizeToTray()
-        TrayManager.showNotification("云析", "已最小化到系统托盘，下载仍在后台继续")
+        TrayManager.showNotification("YunX-OS", "已最小化到系统托盘，下载仍在后台继续")
     }
 
     // 监听关闭请求信号
@@ -945,7 +945,7 @@ fun MainScreen(
             )
         }
 
-        // 关于云析：叠加覆盖层（淡入 + 轻微缩放过渡）
+        // 关于 YunX-OS：叠加覆盖层（淡入 + 轻微缩放过渡）
         AnimatedVisibility(
             visible = showAbout,
             enter = fadeIn(tween(220)) + scaleIn(tween(220), initialScale = 0.96f),

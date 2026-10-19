@@ -61,7 +61,7 @@ import com.yunx.app.util.DesktopActions
 private const val QQ_GROUP = "635207650"
 
 /**
- * 关于云析页：应用介绍、支持平台、功能特性、技术栈与免责声明。
+ * 关于 YunX-OS 页：应用介绍、支持平台、功能特性、技术栈与免责声明。
  * Material3 风格：卡片分区 + 主题色 + 动态色适配。
  */
 @OptIn(ExperimentalMaterial3Api::class)
@@ -79,7 +79,7 @@ fun AboutScreen(
         modifier = modifier.fillMaxSize(),
         topBar = {
             TopAppBar(
-                title = { Text("关于云析", style = MaterialTheme.typography.titleLarge) },
+                title = { Text("关于 YunX-OS", style = MaterialTheme.typography.titleLarge) },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "返回")
@@ -106,10 +106,10 @@ fun AboutScreen(
             InfoCard(
                 icon = Icons.Outlined.Cloud,
                 title = "应用简介",
-                description = "云析（YunX）是一款网盘分享链接解析与高速下载工具。" +
+                description = "YunX-OS 是一款网盘分享链接解析与高速下载工具。" +
                     "粘贴分享链接，登录网盘账号后即可浏览分享内容并直接高速下载文件。\n" +
-                    "桌面移植端：YunX-Desktop 基于 Compose Multiplatform 构建，" +
-                    "将云析完整移植到 Windows 桌面，提供与移动端一致的解析与下载体验。"
+                    "YunX-OS 基于 Compose Multiplatform 构建，" +
+                    "提供与移动端一致的解析与下载体验。"
             )
             
 
@@ -147,7 +147,7 @@ fun AboutScreen(
 
             Spacer(modifier = Modifier.height(8.dp))
             Text(
-                text = "云析 v$versionName · Made with ❤ and deepseek",
+                text = "YunX-OS v$versionName · Made with ❤ and deepseek",
                 style = MaterialTheme.typography.labelMedium,
                 color = MaterialTheme.colorScheme.outline,
                 modifier = Modifier
@@ -170,18 +170,18 @@ private fun AppHeader(versionName: String) {
     ) {
         Image(
             painter = painterResource("about_icon.png"),
-            contentDescription = "云析图标",
+            contentDescription = "YunX-OS 图标",
             modifier = Modifier.size(88.dp)
         )
         Spacer(modifier = Modifier.height(14.dp))
         Text(
-            text = "云析",
+            text = "YunX-OS",
             style = MaterialTheme.typography.headlineMedium,
             fontWeight = FontWeight.SemiBold
         )
         Spacer(modifier = Modifier.height(4.dp))
         Text(
-            text = "YunX-Desktop · v$versionName",
+            text = "YunX-OS · v$versionName",
             style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.onSurfaceVariant
         )
@@ -535,7 +535,7 @@ private fun GitHubCard() {
 private fun DesktopRepoCard() {
     Card(
         onClick = {
-            DesktopActions.openUrl("https://github.com/tidain/YunX-Desktop")
+            DesktopActions.openUrl("https://github.com/QYss777/YunX-macOS")
         },
         modifier = Modifier.fillMaxWidth(),
         shape = MaterialTheme.shapes.large,
@@ -571,7 +571,7 @@ private fun DesktopRepoCard() {
                     fontWeight = FontWeight.Medium
                 )
                 Text(
-                    text = "github.com/tidain/YunX-Desktop",
+                    text = "github.com/QYss777/YunX-macOS",
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )

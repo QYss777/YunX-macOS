@@ -118,7 +118,7 @@ fun main(args: Array<String>) {
             onCloseRequest = {
                 if (!suppressCloseRequest) closeRequested = true
             },
-            title = "云析 YunX-Desktop",
+            title = "YunX-OS",
             state = WindowState(size = DpSize(1100.dp, 760.dp)),
             icon = remember { loadWindowIcon() },
         ) {

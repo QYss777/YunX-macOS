@@ -103,7 +103,7 @@ class SettingsRepository {
         }
 
     /**
-     * 诊断模式（设置 → 关于云析 → 长按 → 开发调试）：默认关，开启后把 db / crypto / download /
+     * 诊断模式（设置 → 关于 YunX-OS → 长按 → 开发调试）：默认关，开启后把 db / crypto / download /
      * webview / network / operation 六个模块的详细日志写进数据目录（见 `DiagnosticLog`）。
      * ★ 这里只存开关值，运行态由 `DiagnosticLog` 自己缓存（改完立刻生效，不必重启）。
      */
@@ -114,7 +114,7 @@ class SettingsRepository {
         }
 
     /**
-     * 下载调试（设置 → 关于云析 → 长按 → 开发调试）：默认关。
+     * 下载调试（设置 → 关于 YunX-OS → 长按 → 开发调试）：默认关。
      * 开启后按下载任务记录事件流（主要变更节点 / 错误节点），下载页右键任务可进「调试信息」页查看并导出；
      * **关闭会清空全部日志**（见 `DownloadDebugLog`），所以设置页关开关前有二次确认弹窗。
      */

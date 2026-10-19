@@ -127,7 +127,7 @@ object AnnouncementApi {
                 val call = Request.Builder()
                     .url(url)
                     .header("Accept", "application/json")
-                    .header("User-Agent", "YunX-Desktop")
+                    .header("User-Agent", "YunX-OS")
                     // 关键：不带这个头服务端按手机端处理，会返回手机端专属公告（见 API-PC.md）
                     .header(CLIENT_PLATFORM_HEADER, CLIENT_PLATFORM_DESKTOP)
                     .get()

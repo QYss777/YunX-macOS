@@ -73,7 +73,7 @@ private const val STUCK_MIN_BPS = 12 * 1024L
 /**
  * 下载调试页（下载页右键任务 → 「调试信息」）。
  *
- * 需先在「设置 → 关于云析 → 长按 → 开发调试 → 下载调试」打开开关；否则右键菜单里不会出现入口。
+ * 需先在「设置 → 关于 YunX-OS → 长按 → 开发调试 → 下载调试」打开开关；否则右键菜单里不会出现入口。
  *
  * ★ 数据是**拉取式**的：每秒拉一次，离开页面即取消 —— 不打开本页时对下载没有任何额外开销。
  *
@@ -493,7 +493,7 @@ private fun buildSnapshotText(
     resources: DownloadResourceDebug?,
     env: String
 ): String = buildString {
-    appendLine("云析 YunX-Desktop 下载调试快照")
+    appendLine("YunX-OS 下载调试快照")
     appendLine("任务 id：${task.id}　文件名：${task.fileName}")
     appendLine("状态：${DownloadTaskEntity.statusText(task.status)}　平台：${task.platform.ifBlank { "-" }}")
     appendLine("执行器：${task.engineTaskId.ifBlank { "内置分片下载器" }}")

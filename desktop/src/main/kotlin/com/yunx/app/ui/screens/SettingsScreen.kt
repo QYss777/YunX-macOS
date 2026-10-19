@@ -480,7 +480,7 @@ fun SettingsScreen(
         SectionLabel("关于")
         SettingsItem(
             icon = Icons.Outlined.Info,
-            title = "关于云析",
+            title = "关于 YunX-OS",
             description = "版本信息、支持平台与技术说明",
             onClick = onAboutClick,
             onLongClick = { showDevMenu = true } // 长按打开隐藏开发调试菜单
@@ -578,7 +578,7 @@ fun SettingsScreen(
         }
     )
 
-    // 隐藏开发调试菜单（长按「关于云析」打开）
+    // 隐藏开发调试菜单（长按「关于 YunX-OS」打开）
     FadeAlertDialog(
         visible = showDevMenu,
         onDismissRequest = { showDevMenu = false },
@@ -900,7 +900,7 @@ fun SettingsScreen(
                     val target = DesktopActions.saveFile(
                         defaultName = backupManager.defaultBackupFileName(encrypted),
                         title = "导出网盘认证",
-                        filters = listOf("云析认证备份 (*.yunx)" to "*.yunx", "所有文件 (*.*)" to "*.*"),
+                        filters = listOf("YunX-OS 认证备份 (*.yunx)" to "*.yunx", "所有文件 (*.*)" to "*.*"),
                         defaultExtension = "yunx"
                     ) ?: return@launch
                     val saved = withContext(Dispatchers.IO) {

@@ -17,7 +17,7 @@ macOS 构建不需要 Windows 的 C++、Inno Setup 或 PowerShell 工具链。
 ## 命令
 
 ```bash
-git clone https://github.com/liuyinkang0115-debug/YunX-macOS.git
+git clone https://github.com/QYss777/YunX-macOS.git
 cd YunX-macOS
 
 gradle :desktop:run        # 编译并启动开发版
@@ -37,9 +37,9 @@ gradle :desktop:packagePkg # 生成 PKG 安装包
 
 | 产物 | 位置 | 说明 |
 | --- | --- | --- |
-| DMG 安装包 | `desktop/build/compose/binaries/main/dmg/YunX-Desktop-<版本>.dmg` | 双击后将应用拖入「应用程序」目录 |
-| PKG 安装包 | `desktop/build/compose/binaries/main/pkg/YunX-Desktop-<版本>.pkg` | 使用 macOS 安装器安装 |
-| ZIP 压缩包 | GitHub Release 附件 | 解压后直接运行 `YunX-Desktop.app`，适合便携分发 |
+| DMG 安装包 | `desktop/build/compose/binaries/main/dmg/YunX-OS-<版本>.dmg` | 双击后将应用拖入「应用程序」目录 |
+| PKG 安装包 | `desktop/build/compose/binaries/main/pkg/YunX-OS-<版本>.pkg` | 使用 macOS 安装器安装 |
+| ZIP 压缩包 | GitHub Release 附件 | 解压后直接运行 `YunX-OS.app`，适合便携分发 |
 
 打包脚本会自动结束正在运行的程序实例，并在输出目录被占用时重试删除。
 
