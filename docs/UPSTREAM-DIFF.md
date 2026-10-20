@@ -1,11 +1,15 @@
 # 与上游的差异（macOS 桌面版 vs Android 版）
 
 - 上游（Android）：[CYQawa/YunX](https://github.com/CYQawa/YunX)
+- Windows 参考项目：[tidain/YunX-Desktop](https://github.com/tidain/YunX-Desktop)
 - 本仓库（macOS 桌面移植）：[QYss777/YunX-macOS](https://github.com/QYss777/YunX-macOS)
 
 **沿用上游的部分**：网盘分享链接的解析协议、下载引擎（Range 分片并发、弹性区按字节顺序分配、
 断点续传、失败重试、全局限速）、界面框架与主题体系（Compose + Material 3、深色模式 + 种子色）、
 各网盘 API 的协议实现。
+
+桌面交互和部分功能实现参考 Windows 桌面项目 `tidain/YunX-Desktop`；macOS 的托盘、通知、文件对话框、
+浏览器 Cookie 导入和打包分发则按 macOS 平台重新实现。
 
 下面只列桌面版**新增、重做或移除**的内容。
 
@@ -360,12 +364,3 @@
 | `ThemeScreenAppIconOption` / 主题模式的 `selectable` + `selectableGroup` 语义（#164） | **未移植**：纯无障碍语义改动，桌面端对读屏依赖低，本轮不引入 |
 | `28bfa37`(#154) 新增友情链接、`0f27e67`(#155) README 截图替换 | **不移植**：纯 README / 图片资源，桌面仓库的 README 独立维护 |
 | 登录页 `liveRegion` 语义、`isError` → `enabled`、密码可见性图标语义（#164） | **未移植**：纯无障碍语义改动（桌面端对读屏依赖低），本轮不引入 |
-
-
-
-
-
-
-
-
-

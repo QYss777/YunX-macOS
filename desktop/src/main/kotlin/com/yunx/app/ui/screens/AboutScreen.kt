@@ -109,7 +109,7 @@ fun AboutScreen(
                 description = "YunX-OS 是一款网盘分享链接解析与高速下载工具。" +
                     "粘贴分享链接，登录网盘账号后即可浏览分享内容并直接高速下载文件。\n" +
                     "YunX-OS 基于 Compose Multiplatform 构建，" +
-                    "提供与移动端一致的解析与下载体验。"
+                    "基于 CYQawa/YunX Android 上游移植，并参考 tidain/YunX-Desktop Windows 桌面版。"
             )
             
 
@@ -139,6 +139,8 @@ fun AboutScreen(
 
             // ---------- 开源仓库 ----------
             GitHubCard()
+            Spacer(modifier = Modifier.height(8.dp))
+            WindowsRepoCard()
             Spacer(modifier = Modifier.height(8.dp))
             DesktopRepoCard()
 
@@ -530,7 +532,63 @@ private fun GitHubCard() {
     }
 }
 
-/** PC 移植版仓库入口卡片 */
+/** Windows 参考项目仓库入口卡片 */
+@Composable
+private fun WindowsRepoCard() {
+    Card(
+        onClick = {
+            DesktopActions.openUrl("https://github.com/tidain/YunX-Desktop")
+        },
+        modifier = Modifier.fillMaxWidth(),
+        shape = MaterialTheme.shapes.large,
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.surfaceContainerLow
+        )
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Surface(
+                modifier = Modifier.size(40.dp),
+                shape = CircleShape,
+                color = MaterialTheme.colorScheme.secondaryContainer
+            ) {
+                Box(contentAlignment = Alignment.Center) {
+                    Icon(
+                        imageVector = Icons.Outlined.DesktopWindows,
+                        contentDescription = null,
+                        modifier = Modifier.size(20.dp),
+                        tint = MaterialTheme.colorScheme.onSecondaryContainer
+                    )
+                }
+            }
+            Spacer(modifier = Modifier.width(14.dp))
+            Column(modifier = Modifier.weight(1f)) {
+                Text(
+                    text = "Windows 参考项目",
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Medium
+                )
+                Text(
+                    text = "github.com/tidain/YunX-Desktop",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+            Icon(
+                imageVector = Icons.Outlined.OpenInNew,
+                contentDescription = null,
+                modifier = Modifier.size(18.dp),
+                tint = MaterialTheme.colorScheme.outline
+            )
+        }
+    }
+}
+
+/** macOS 移植版仓库入口卡片 */
 @Composable
 private fun DesktopRepoCard() {
     Card(
@@ -566,7 +624,7 @@ private fun DesktopRepoCard() {
             Spacer(modifier = Modifier.width(14.dp))
             Column(modifier = Modifier.weight(1f)) {
                 Text(
-                    text = "PC 移植版仓库",
+                    text = "macOS 移植版仓库",
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.Medium
                 )

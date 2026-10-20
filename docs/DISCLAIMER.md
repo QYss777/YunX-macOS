@@ -38,7 +38,8 @@ YunX-OS（含上游 Android 版与本 macOS 桌面版）**完全免费开源**�
 
 ## 开源协议
 
-本项目基于上游 [CYQawa/YunX](https://github.com/CYQawa/YunX) 移植，
+本项目基于上游 [CYQawa/YunX](https://github.com/CYQawa/YunX) 移植，并参考
+[tidain/YunX-Desktop](https://github.com/tidain/YunX-Desktop) Windows 桌面版，
 同样以 [GNU AGPL-3.0](https://www.gnu.org/licenses/agpl-3.0.html) 协议开源，详见根目录 [LICENSE](../LICENSE)。
 
 若你使用了本项目的代码，请同样以 AGPL-3.0 开放源代码。

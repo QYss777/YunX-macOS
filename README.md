@@ -24,7 +24,8 @@
 > **YunX-OS 永远免费开源。** 如果你是在任何地方「花钱买到」的，说明你被骗了，请立即退款。
 > 任何收费版本均为二次打包的诈骗版本，与本项目无关。
 
-> **本项目使用 AGPL-3.0 开源协议。** 基于上游 [CYQawa/YunX](https://github.com/CYQawa/YunX)（Android）移植，
+> **本项目使用 AGPL-3.0 开源协议。** 基于上游 [CYQawa/YunX](https://github.com/CYQawa/YunX)（Android）移植，并参考
+> [tidain/YunX-Desktop](https://github.com/tidain/YunX-Desktop)（Windows 桌面版）的实现，
 > 若你使用了本项目的代码，请同样以 AGPL-3.0 开放源代码。
 
 ## 简介
@@ -84,6 +85,9 @@ YunX-OS 的 **macOS 桌面版**：粘贴网盘分享链接，浏览分享内容�
 
 桌面版在**登录方式、系统集成（托盘 / 通知 / 原生对话框）、数据存储、构建分发**上做了较大改造，
 并移除了一部分移动端专属功能。完整清单见 **[与上游的差异](docs/UPSTREAM-DIFF.md)**。
+
+本项目的桌面交互和部分功能实现参考了 [tidain/YunX-Desktop](https://github.com/tidain/YunX-Desktop) Windows 桌面版，
+macOS 平台的系统集成和构建分发已按 macOS 环境重新实现。
 
 ## 技术栈
 
@@ -168,13 +172,16 @@ DMG 双击后将应用拖入「应用程序」目录；ZIP 解压后可直接运
 
 ## 开源协议
 
-本项目基于上游 [CYQawa/YunX](https://github.com/CYQawa/YunX) 移植，同样以
+本项目基于上游 [CYQawa/YunX](https://github.com/CYQawa/YunX) 移植，并参考
+[tidain/YunX-Desktop](https://github.com/tidain/YunX-Desktop) Windows 桌面版，同样以
 [GNU AGPL-3.0](https://www.gnu.org/licenses/agpl-3.0.html) 协议开源，详见 [LICENSE](LICENSE)。
 完整的免责与合规说明见 **[免责声明](docs/DISCLAIMER.md)**。
 
 ## 更多
 
 - 原安卓项目仓库：<https://github.com/CYQawa/YunX>
+
+- Windows 参考项目：<https://github.com/tidain/YunX-Desktop>
 
 - macOS 版仓库：<https://github.com/QYss777/YunX-macOS>
 
