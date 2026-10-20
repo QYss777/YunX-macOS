@@ -37,10 +37,10 @@ YunX-OS 的 **macOS 桌面版**：粘贴网盘分享链接，浏览分享内容�
 
 |                                                          |                                                            |
 | :------------------------------------------------------: | :--------------------------------------------------------: |
-| <img src="docs/images/主界面.png" width="430" alt="主界面" />   | <img src="docs/images/网盘登录.png" width="430" alt="网盘登录" />   |
-|                           主界面                           |                           网盘登录                           |
-| <img src="docs/images/设置.png" width="430" alt="设置" />     | <img src="docs/images/关于.png" width="430" alt="关于" />     |
-|                            设置                            |                            关于                            |
+| <img src="docs/images/解析.png" width="430" alt="解析" />   | <img src="docs/images/下载.png" width="430" alt="下载" />   |
+|                           解析                           |                           下载                           |
+| <img src="docs/images/网盘.png" width="430" alt="网盘" />   | <img src="docs/images/设置.png" width="430" alt="设置" />   |
+|                           网盘                           |                           设置                           |
 
 ## 支持平台
 
