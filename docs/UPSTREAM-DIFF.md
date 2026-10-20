@@ -364,3 +364,12 @@
 | `ThemeScreenAppIconOption` / 主题模式的 `selectable` + `selectableGroup` 语义（#164） | **未移植**：纯无障碍语义改动，桌面端对读屏依赖低，本轮不引入 |
 | `28bfa37`(#154) 新增友情链接、`0f27e67`(#155) README 截图替换 | **不移植**：纯 README / 图片资源，桌面仓库的 README 独立维护 |
 | 登录页 `liveRegion` 语义、`isError` → `enabled`、密码可见性图标语义（#164） | **未移植**：纯无障碍语义改动（桌面端对读屏依赖低），本轮不引入 |
+
+
+
+
+
+
+
+
+
